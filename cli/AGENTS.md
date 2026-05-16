@@ -1,50 +1,50 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents working on the `skills` CLI codebase.
+本文件为在 `skills` CLI 代码库上工作的 AI 编程助手提供指引。
 
-## Project Overview
+## 项目概览
 
-`skills` is the CLI for the open agent skills ecosystem.
+`skills` 是开放 Agent 技能生态系统的命令行工具。
 
-## Commands
+## 命令
 
-| Command                       | Description                                         |
-| ----------------------------- | --------------------------------------------------- |
-| `skills`                      | Show banner with available commands                 |
-| `skills add <pkg>`            | Install skills from git repos, URLs, or local paths |
-| `skills experimental_install` | Restore skills from skills-lock.json                |
-| `skills experimental_sync`    | Sync skills from node_modules into agent dirs       |
-| `skills list`                 | List installed skills (alias: `ls`)                 |
-| `skills update [skills...]`   | Update skills to latest versions                    |
-| `skills init [name]`          | Create a new SKILL.md template                      |
+| 命令                          | 说明                                           |
+| ----------------------------- | ---------------------------------------------- |
+| `skills`                      | 显示横幅与可用命令                             |
+| `skills add <pkg>`            | 从 Git 仓库、URL 或本地路径安装技能            |
+| `skills experimental_install` | 从 skills-lock.json 恢复技能                   |
+| `skills experimental_sync`    | 将 node_modules 中的技能同步到各 Agent 目录    |
+| `skills list`                 | 列出已安装技能（别名：`ls`）                   |
+| `skills update [skills...]`   | 将技能更新到最新版本                           |
+| `skills init [name]`          | 创建新的 SKILL.md 模板                         |
 
-Aliases: `skills a` works for `add`. `skills i`, `skills install` (no args) restore from `skills-lock.json`. `skills ls` works for `list`. `skills experimental_install` restores from `skills-lock.json`. `skills experimental_sync` crawls `node_modules` for skills.
+别名：`skills a` 等同于 `add`。`skills i`、`skills install`（无参数）从 `skills-lock.json` 恢复。`skills ls` 等同于 `list`。`skills experimental_install` 从 `skills-lock.json` 恢复。`skills experimental_sync` 扫描 `node_modules` 中的技能。
 
-## Architecture
+## 架构
 
 ```
 src/
-├── cli.ts           # Main entry point, command routing, init/check/update
-├── add.ts           # Core add command logic
-├── constants.ts      # Shared constants
-├── find.ts           # Find/search command
-├── list.ts          # List installed skills command
-├── remove.ts         # Remove command implementation
-├── agents.ts        # Agent definitions and detection
-├── installer.ts     # Skill installation logic (symlink/copy) + listInstalledSkills
-├── skills.ts        # Skill discovery and parsing
-├── skill-lock.ts    # Global lock file management (~/.agents/.skill-lock.json)
-├── local-lock.ts    # Local lock file management (skills-lock.json, checked in)
-├── sync.ts          # Sync command - crawl node_modules for skills
-├── source-parser.ts # Parse git URLs, GitHub shorthand, local paths
-├── git.ts           # Git clone operations
-├── telemetry.ts     # Anonymous usage tracking
-├── types.ts         # TypeScript types
-├── mintlify.ts      # Mintlify skill fetching (legacy)
-├── plugin-manifest.ts # Plugin manifest discovery support
-├── prompts/         # Interactive prompt helpers
+├── cli.ts           # 主入口：命令路由、init/check/update
+├── add.ts           # add 命令核心逻辑
+├── constants.ts      # 共享常量
+├── find.ts           # find/搜索命令
+├── list.ts          # 列出已安装技能
+├── remove.ts         # remove 命令实现
+├── agents.ts        # Agent 定义与检测
+├── installer.ts     # 技能安装（符号链接/复制）+ listInstalledSkills
+├── skills.ts        # 技能发现与解析
+├── skill-lock.ts    # 全局锁文件（~/.agents/.skill-lock.json）
+├── local-lock.ts    # 项目锁文件（skills-lock.json，可提交）
+├── sync.ts          # sync 命令：扫描 node_modules 中的技能
+├── source-parser.ts # 解析 git URL、GitHub 简写、本地路径
+├── git.ts           # Git 克隆
+├── telemetry.ts     # 匿名使用统计
+├── types.ts         # TypeScript 类型
+├── mintlify.ts      # Mintlify 技能拉取（遗留）
+├── plugin-manifest.ts # 插件清单发现
+├── prompts/         # 交互式提示辅助
 │   └── search-multiselect.ts
-├── providers/       # Remote skill providers (GitHub, HuggingFace, Mintlify)
+├── providers/       # 远程技能提供方（GitHub、HuggingFace、Mintlify）
 │   ├── index.ts
 │   ├── registry.ts
 │   ├── types.ts
@@ -52,119 +52,119 @@ src/
 │   ├── mintlify.ts
 │   └── wellknown.ts
 tests/
-├── test-utils.ts            # CLI subprocess test helpers
-├── add.test.ts              # Add command tests
-├── add-prompt.test.ts       # Add prompt behavior tests
-├── cli.test.ts              # CLI tests
-├── init.test.ts             # Init command tests
-├── list.test.ts             # List command tests
-├── remove.test.ts           # Remove command tests
-├── update-source.test.ts    # Update source formatting tests
-├── source-parser-gitlab.test.ts # GitLab / git URL parser tests
-├── cross-platform-paths.test.ts # Path normalization across platforms
-├── full-depth-discovery.test.ts # --full-depth skill discovery tests
-├── openclaw-paths.test.ts       # OpenClaw-specific path tests
-├── plugin-manifest-discovery.test.ts # Plugin manifest skill discovery
-├── sanitize-name.test.ts     # Tests for sanitizeName (path traversal prevention)
-├── skill-matching.test.ts    # Tests for filterSkills (multi-word skill name matching)
-├── source-parser.test.ts     # Tests for URL/path parsing
-├── installer-symlink.test.ts # Tests for symlink installation
-├── list-installed.test.ts    # Tests for listing installed skills
-├── skill-path.test.ts        # Tests for skill path handling
-├── wellknown-provider.test.ts # Tests for well-known provider
-├── xdg-config-paths.test.ts   # XDG global path handling tests
-└── dist.test.ts               # Tests for built distribution
+├── test-utils.ts            # CLI 子进程测试辅助
+├── add.test.ts              # add 命令测试
+├── add-prompt.test.ts       # add 提示行为测试
+├── cli.test.ts              # CLI 测试
+├── init.test.ts             # init 命令测试
+├── list.test.ts             # list 命令测试
+├── remove.test.ts           # remove 命令测试
+├── update-source.test.ts    # 更新 source 格式化测试
+├── source-parser-gitlab.test.ts # GitLab / git URL 解析测试
+├── cross-platform-paths.test.ts # 跨平台路径规范化
+├── full-depth-discovery.test.ts # --full-depth 技能发现测试
+├── openclaw-paths.test.ts       # OpenClaw 专用路径测试
+├── plugin-manifest-discovery.test.ts # 插件清单技能发现
+├── sanitize-name.test.ts     # sanitizeName 测试（防路径遍历）
+├── skill-matching.test.ts    # filterSkills 测试（多词技能名匹配）
+├── source-parser.test.ts     # URL/路径解析测试
+├── installer-symlink.test.ts # 符号链接安装测试
+├── list-installed.test.ts    # 已安装技能列表测试
+├── skill-path.test.ts        # 技能路径处理测试
+├── wellknown-provider.test.ts # well-known 提供方测试
+├── xdg-config-paths.test.ts   # XDG 全局路径测试
+└── dist.test.ts               # 构建产物分发测试
 ```
 
-## Update Checking System
+## 更新检查机制
 
-### How `skills check` and `skills update` Work
+### `skills check` 与 `skills update` 如何工作
 
-1. Read `~/.agents/.skill-lock.json` for installed skills
-2. Filter to GitHub-backed skills that have both `skillFolderHash` and `skillPath`
-3. For each skill, call `fetchSkillFolderHash(source, skillPath, token)`. Optional auth token is sourced from `GITHUB_TOKEN`, `GH_TOKEN`, or `gh auth token` to improve rate limits.
-4. `fetchSkillFolderHash` calls GitHub Trees API directly (`/git/trees/<branch>?recursive=1` for `main`, then `master` fallback)
-5. Compare latest folder tree SHA with lock file `skillFolderHash`; mismatch means update available
-6. `skills update` reinstalls changed skills by invoking the current CLI entrypoint directly (`node <repo>/bin/cli.mjs add <source-tree-url> -g -y`) to avoid nested npm exec/npx behavior
+1. 读取 `~/.agents/.skill-lock.json` 中的已安装技能
+2. 筛选 GitHub 来源且同时具备 `skillFolderHash` 与 `skillPath` 的技能
+3. 对每个技能调用 `fetchSkillFolderHash(source, skillPath, token)`。可选认证令牌来自 `GITHUB_TOKEN`、`GH_TOKEN` 或 `gh auth token`，用于提高速率限制
+4. `fetchSkillFolderHash` 直接调用 GitHub Trees API（先 `main` 分支 `/git/trees/<branch>?recursive=1`，失败则回退 `master`）
+5. 将最新目录树 SHA 与锁文件中的 `skillFolderHash` 比较；不一致表示有更新
+6. `skills update` 通过直接调用当前 CLI 入口（`node <repo>/bin/cli.mjs add <source-tree-url> -g -y`）重装变更的技能，避免嵌套 npm exec/npx
 
-### Lock File Compatibility
+### 锁文件兼容性
 
-The lock file format is v3. Key field: `skillFolderHash` (GitHub tree SHA for the skill folder).
+锁文件格式为 v3。关键字段：`skillFolderHash`（技能目录的 GitHub tree SHA）。
 
-If reading an older lock file version, it's wiped. Users must reinstall skills to populate the new format.
+若读取到旧版锁文件，会被清空。用户需重新安装技能以填充新格式。
 
-## Key Integration Points
+## 关键集成点
 
-| Feature                    | Implementation                                                |
+| 功能                       | 实现                                                          |
 | -------------------------- | ------------------------------------------------------------- |
-| `skills add`               | `src/add.ts` - full implementation                            |
-| `skills experimental_sync` | `src/sync.ts` - crawl node_modules                            |
-| `skills check`             | `src/cli.ts` + `fetchSkillFolderHash` in `src/skill-lock.ts`  |
-| `skills update`            | `src/cli.ts` direct hash compare + reinstall via `skills add` |
+| `skills add`               | `src/add.ts` — 完整实现                                       |
+| `skills experimental_sync` | `src/sync.ts` — 扫描 node_modules                             |
+| `skills check`             | `src/cli.ts` + `src/skill-lock.ts` 中的 `fetchSkillFolderHash` |
+| `skills update`            | `src/cli.ts` 直接比较 hash + 通过 `skills add` 重装           |
 
-## Development
+## 开发
 
 ```bash
-# Install dependencies
+# 安装依赖
 pnpm install
 
-# Build
+# 构建
 pnpm build
 
-# Test locally
+# 本地测试
 pnpm dev add vercel-labs/agent-skills --list
 pnpm dev experimental_sync
 pnpm dev check
 pnpm dev update
 pnpm dev init my-skill
 
-# Run all tests
+# 运行全部测试
 pnpm test
 
-# Run specific test file(s)
+# 运行指定测试文件
 pnpm test tests/sanitize-name.test.ts
 pnpm test tests/skill-matching.test.ts tests/source-parser.test.ts
 
-# Type check
+# 类型检查
 pnpm type-check
 
-# Format code
+# 格式化代码
 pnpm format
 
-# Check formatting
+# 仅检查格式
 pnpm format:check
 
-# Validate and sync agent metadata/docs
+# 校验并同步 Agent 元数据/文档
 pnpm run -C scripts validate-agents.ts
 pnpm run -C scripts sync-agents.ts
 ```
 
-## Code Style
+## 代码风格
 
-This project uses Prettier for code formatting. **Always run `pnpm format` before committing changes** to ensure consistent formatting.
+本项目使用 Prettier 格式化代码。**提交前请运行 `pnpm format`**，以保持格式一致。
 
 ```bash
-# Format all files
+# 格式化所有文件
 pnpm format
 
-# Check formatting without fixing
+# 仅检查、不修改
 pnpm format:check
 ```
 
-CI will fail if code is not properly formatted.
+CI 会在格式不正确时失败。
 
-## Publishing
+## 发布
 
 ```bash
-# 1. Bump version in package.json
-# 2. Build
+# 1. 在 package.json 中 bump 版本
+# 2. 构建
 pnpm build
-# 3. Publish
+# 3. 发布
 npm publish
 ```
 
-## Adding a New Agent
+## 添加新 Agent
 
-1. Add the agent definition to `src/agents.ts`
-2. Run `pnpm run -C scripts validate-agents.ts` to validate
-3. Run `pnpm run -C scripts sync-agents.ts` to update README.md and package keywords
+1. 在 `src/agents.ts` 中添加 Agent 定义
+2. 运行 `pnpm run -C scripts validate-agents.ts` 校验
+3. 运行 `pnpm run -C scripts sync-agents.ts` 更新 README.md 与 package keywords
