@@ -25,9 +25,7 @@ export interface SyncOptions {
   force?: boolean;
 }
 
-/**
- * Shortens a path for display: replaces homedir with ~ and cwd with .
- */
+/** 缩短路径用于显示：将 homedir 换为 ~，cwd 换为 . */
 function shortenPath(fullPath: string, cwd: string): string {
   const home = homedir();
   if (fullPath === home || fullPath.startsWith(home + sep)) {
@@ -40,9 +38,9 @@ function shortenPath(fullPath: string, cwd: string): string {
 }
 
 /**
- * Crawl node_modules for SKILL.md files.
- * Searches both top-level packages and scoped packages (@org/pkg).
- * Returns discovered skills with their source package name.
+ * 扫描 node_modules 中的 SKILL.md。
+ * 搜索顶层包与作用域包（@org/pkg）。
+ * 返回发现的技能及其来源包名。
  */
 async function discoverNodeModuleSkills(
   cwd: string
@@ -58,14 +56,14 @@ async function discoverNodeModuleSkills(
   }
 
   const processPackageDir = async (pkgDir: string, packageName: string) => {
-    // Check for SKILL.md at package root
+    // 检查包根目录的 SKILL.md
     const rootSkill = await parseSkillMd(join(pkgDir, 'SKILL.md'));
     if (rootSkill) {
       skills.push({ ...rootSkill, packageName });
       return;
     }
 
-    // Check common skill locations within the package
+    // 检查包内常见技能目录
     const searchDirs = [pkgDir, join(pkgDir, 'skills'), join(pkgDir, '.agents', 'skills')];
 
     for (const searchDir of searchDirs) {
@@ -85,7 +83,7 @@ async function discoverNodeModuleSkills(
           }
         }
       } catch {
-        // Directory doesn't exist
+        // 目录不存在
       }
     }
   };
@@ -103,7 +101,7 @@ async function discoverNodeModuleSkills(
       }
 
       if (name.startsWith('@')) {
-        // Scoped package: read @org/* entries
+        // 作用域包：读取 @org/* 条目
         try {
           const scopeNames = await readdir(fullPath);
           await Promise.all(
@@ -119,7 +117,7 @@ async function discoverNodeModuleSkills(
             })
           );
         } catch {
-          // Scope directory not readable
+          // 作用域目录不可读
         }
       } else {
         await processPackageDir(fullPath, name);
@@ -133,7 +131,7 @@ async function discoverNodeModuleSkills(
 export async function runSync(args: string[], options: SyncOptions = {}): Promise<void> {
   const cwd = process.cwd();
 
-  // Auto-enable non-interactive mode when running inside an AI agent
+  // 在 AI agent 内运行时自动启用非交互模式
   const agentResult = await detectAgent();
   if (agentResult.isAgent) {
     options.yes = true;
@@ -164,7 +162,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
   const spinner = p.spinner();
 
-  // 1. Discover skills from node_modules
+  // 1. 从 node_modules 发现技能
   spinner.start('Scanning node_modules for skills...');
   const discoveredSkills = await discoverNodeModuleSkills(cwd);
 
@@ -178,7 +176,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     `Found ${pc.green(String(discoveredSkills.length))} skill${discoveredSkills.length > 1 ? 's' : ''} in node_modules`
   );
 
-  // Show discovered skills
+  // 展示发现的技能
   for (const skill of discoveredSkills) {
     p.log.info(`${pc.cyan(skill.name)} ${pc.dim(`from ${skill.packageName}`)}`);
     if (skill.description) {
@@ -186,7 +184,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
   }
 
-  // 2. Check which skills are already up-to-date via local lock
+  // 2. 通过本地 lock 检查哪些技能已是最新
   const localLock = await readLocalLock(cwd);
   const toInstall: Array<Skill & { packageName: string }> = [];
   const upToDate: string[] = [];
@@ -198,7 +196,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     for (const skill of discoveredSkills) {
       const existingEntry = localLock.skills[skill.name];
       if (existingEntry) {
-        // Compute current hash and compare
+        // 计算当前哈希并比较
         const currentHash = await computeSkillFolderHash(skill.path);
         if (currentHash === existingEntry.computedHash) {
           upToDate.push(skill.name);
@@ -223,7 +221,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
   p.log.info(`${toInstall.length} skill${toInstall.length !== 1 ? 's' : ''} to install/update`);
 
-  // 3. Select agents
+  // 3. 选择 agent
   let targetAgents: AgentType[];
   const validAgents = Object.keys(agents);
   const universalAgents = getUniversalAgents();
@@ -279,7 +277,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
         targetAgents = selected as AgentType[];
       }
     } else if (installedAgents.length === 1 || options.yes) {
-      // Ensure universal agents are included
+      // 确保包含通用 agent
       targetAgents = [...installedAgents];
       for (const ua of universalAgents) {
         if (!targetAgents.includes(ua)) {
@@ -317,7 +315,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
   }
 
-  // 4. Build summary
+  // 4. 构建摘要
   const summaryLines: string[] = [];
   for (const skill of toInstall) {
     const canonicalPath = getCanonicalPath(skill.name, { global: false });
@@ -338,7 +336,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
   }
 
-  // 5. Install skills (always project-scoped, always symlink)
+  // 5. 安装技能（始终项目级，始终符号链接）
   spinner.start('Syncing skills...');
 
   const results: Array<{
@@ -372,7 +370,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
 
   spinner.stop('Sync complete');
 
-  // 6. Update local lock file
+  // 6. 更新本地 lock 文件
   const successful = results.filter((r) => r.success);
   const failed = results.filter((r) => !r.success);
   const successfulSkillNames = new Set(successful.map((r) => r.skill));
@@ -391,12 +389,12 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
           cwd
         );
       } catch {
-        // Don't fail sync if lock file update fails
+        // lock 更新失败不导致 sync 失败
       }
     }
   }
 
-  // 7. Display results
+  // 7. 显示结果
   console.log();
 
   if (successful.length > 0) {
@@ -433,7 +431,7 @@ export async function runSync(args: string[], options: SyncOptions = {}): Promis
     }
   }
 
-  // Track telemetry
+  // 上报遥测
   track({
     event: 'experimental_sync',
     skillCount: String(toInstall.length),

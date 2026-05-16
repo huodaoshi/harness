@@ -22,7 +22,7 @@ export interface RemoveOptions {
 }
 
 export async function removeCommand(skillNames: string[], options: RemoveOptions) {
-  // Auto-enable non-interactive mode when running inside an AI agent
+  // 在 AI agent 内运行时自动启用非交互模式
   const agentResult = await detectAgent();
   if (agentResult.isAgent) {
     options.yes = true;
@@ -78,7 +78,7 @@ export async function removeCommand(skillNames: string[], options: RemoveOptions
     return;
   }
 
-  // Validate agent options BEFORE prompting for skill selection
+  // 在提示选择技能之前校验 agent 选项
   if (options.agent && options.agent.length > 0) {
     const validAgents = Object.keys(agents);
     const invalidAgents = options.agent.filter((a) => !validAgents.includes(a));
@@ -127,8 +127,8 @@ export async function removeCommand(skillNames: string[], options: RemoveOptions
   if (options.agent && options.agent.length > 0) {
     targetAgents = options.agent as AgentType[];
   } else {
-    // When removing, we should target all known agents to ensure
-    // ghost symlinks are cleaned up, even if the agent is not detected.
+    // 移除时应针对全部已知 agent，以清理幽灵符号链接，
+    // 即使该 agent 未被检测到。
     targetAgents = Object.keys(agents) as AgentType[];
     spinner.stop(`Targeting ${targetAgents.length} potential agent(s)`);
   }
@@ -169,9 +169,8 @@ export async function removeCommand(skillNames: string[], options: RemoveOptions
         const agent = agents[agentKey];
         const skillPath = getInstallPath(skillName, agentKey, { global: isGlobal, cwd });
 
-        // Determine potential paths to cleanup. For universal agents, getInstallPath
-        // now returns the canonical path, so we also need to check their 'native'
-        // directory to clean up any legacy symlinks.
+        // 确定待清理路径。对通用 agent，getInstallPath 现返回规范路径，
+        // 还需检查其「原生」目录以清理旧版符号链接。
         const pathsToCleanup = new Set([skillPath]);
         const sanitizedName = sanitizeName(skillName);
         if (isGlobal && agent.globalSkillsDir) {
@@ -181,7 +180,7 @@ export async function removeCommand(skillNames: string[], options: RemoveOptions
         }
 
         for (const pathToCleanup of pathsToCleanup) {
-          // Skip if this is the canonical path - we'll handle that after checking all agents
+          // 规范路径跳过 — 检查完所有 agent 后再处理
           if (pathToCleanup === canonicalPath) {
             continue;
           }
@@ -201,8 +200,8 @@ export async function removeCommand(skillNames: string[], options: RemoveOptions
         }
       }
 
-      // Only remove the canonical path if no other installed agents are using it.
-      // This prevents breaking other agents when uninstalling from a specific agent (#287).
+      // 仅当无其他已安装 agent 使用时才删除规范路径。
+      // 避免从某一 agent 卸载时破坏其他 agent（#287）。
       const installedAgents = await detectInstalledAgents();
       const remainingAgents = installedAgents.filter((a) => !targetAgents.includes(a));
 

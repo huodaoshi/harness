@@ -3,8 +3,8 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { runCli } from './test-utils.ts';
-import { shouldInstallInternalSkills } from './skills.ts';
-import { parseAddOptions } from './add.ts';
+import { shouldInstallInternalSkills } from '../src/skills.ts';
+import { parseAddOptions } from '../src/add.ts';
 
 describe('add command', () => {
   let testDir: string;

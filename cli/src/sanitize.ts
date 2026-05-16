@@ -1,62 +1,58 @@
 /**
- * Sanitize untrusted strings before terminal output.
+ * 在输出到终端前清理不可信字符串。
  *
- * Strips ALL terminal escape sequences from a string, including:
- *   - CSI sequences  (ESC [ ... final_byte)    — cursor movement, screen clear, SGR colors
- *   - OSC sequences  (ESC ] ... BEL/ST)         — window title, hyperlinks
- *   - Simple escapes (ESC followed by one char)  — e.g. ESC 7 (save cursor)
- *   - C1 control codes (0x80–0x9F)
- *   - Raw control characters (BEL, BS, etc.)     — except \t and \n which are safe
+ * 剥离字符串中的全部终端转义序列，包括：
+ *   - CSI 序列  (ESC [ ... final_byte)    — 光标移动、清屏、SGR 颜色
+ *   - OSC 序列  (ESC ] ... BEL/ST)         — 窗口标题、超链接
+ *   - 简单转义 (ESC + 单字符)              — 如 ESC 7（保存光标）
+ *   - C1 控制码 (0x80–0x9F)
+ *   - 原始控制字符 (BEL、BS 等)            — 保留安全的 \t 与 \n
  *
- * This defends against CWE-150 (terminal escape injection) where
- * untrusted data (e.g., skill name/description from SKILL.md frontmatter
- * or remote APIs) could clear the screen, move the cursor, change the
- * window title, or render attacker-controlled text that looks like
- * legitimate CLI output.
+ * 用于防御 CWE-150（终端转义注入）：不可信数据（如 SKILL.md frontmatter
+ * 或远程 API 中的技能名/描述）可能清屏、移动光标、改窗口标题，
+ * 或渲染看似合法 CLI 输出的攻击者文本。
  */
 
-// CSI sequences: ESC[ followed by parameter bytes (0x30-0x3F), intermediate bytes (0x20-0x2F), and a final byte (0x40-0x7E)
+// CSI：ESC[ + 参数字节 (0x30-0x3F) + 中间字节 (0x20-0x2F) + 结束字节 (0x40-0x7E)
 const CSI_RE = /\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/g;
 
-// OSC sequences: ESC] ... terminated by BEL (\x07) or ST (ESC\)
+// OSC：ESC] ... 以 BEL (\x07) 或 ST (ESC\) 结束
 const OSC_RE = /\x1b\][\s\S]*?(?:\x07|\x1b\\)/g;
 
-// DCS, PM, APC sequences: ESC P|^|_ ... terminated by ST (ESC\)
+// DCS、PM、APC：ESC P|^|_ ... 以 ST (ESC\) 结束
 const DCS_PM_APC_RE = /\x1b[P^_][\s\S]*?(?:\x1b\\)/g;
 
-// Simple two-byte escape sequences: ESC followed by a single char in 0x20-0x7E range
-// Includes ESC 7 (DECSC), ESC 8 (DECRC), ESC c (RIS), ESC M (RI), etc.
+// 简单两字节转义：ESC + 0x20-0x7E 单字符
+// 含 ESC 7 (DECSC)、ESC 8 (DECRC)、ESC c (RIS)、ESC M (RI) 等
 const SIMPLE_ESC_RE = /\x1b[\x20-\x7e]/g;
 
-// C1 control codes (0x80-0x9F) — used as 8-bit equivalents of ESC sequences
+// C1 控制码 (0x80-0x9F) — ESC 序列的 8 位等价形式
 const C1_RE = /[\x80-\x9f]/g;
 
-// Raw control characters except tab (\x09) and newline (\x0a)
-// Includes BEL (\x07), BS (\x08), CR (\x0d), and others
+// 除制表符 (\x09)、换行 (\x0a) 外的原始控制字符
+// 含 BEL (\x07)、BS (\x08)、CR (\x0d) 等
 const CONTROL_RE = /[\x00-\x06\x07\x08\x0b\x0c\x0d-\x1a\x1c-\x1f\x7f]/g;
 
 /**
- * Strip all terminal escape sequences and dangerous control characters
- * from a string.
+ * 剥离全部终端转义序列及危险控制字符。
  *
- * Safe for use on untrusted input before printing to the terminal.
+ * 在将不可信输入打印到终端前使用。
  */
 export function stripTerminalEscapes(str: string): string {
   return str
-    .replace(OSC_RE, '') // OSC first (longest match)
+    .replace(OSC_RE, '') // 先处理 OSC（最长匹配）
     .replace(DCS_PM_APC_RE, '') // DCS/PM/APC
-    .replace(CSI_RE, '') // CSI sequences
-    .replace(SIMPLE_ESC_RE, '') // Simple ESC+char
-    .replace(C1_RE, '') // C1 control codes
-    .replace(CONTROL_RE, ''); // Raw control chars (keep \t \n)
+    .replace(CSI_RE, '') // CSI
+    .replace(SIMPLE_ESC_RE, '') // ESC+字符
+    .replace(C1_RE, '') // C1
+    .replace(CONTROL_RE, ''); // 原始控制字符（保留 \t \n）
 }
 
 /**
- * Sanitize a skill metadata string (name, description, etc.) for safe terminal display.
+ * 清理技能元数据字符串（名称、描述等）以便安全显示在终端。
  *
- * In addition to stripping escape sequences, this also trims whitespace and
- * collapses internal newlines into spaces (skill names/descriptions should
- * be single-line when displayed).
+ * 除剥离转义外，还会 trim，并将内部换行折叠为空格
+ * （列表中的名称/描述应为单行）。
  */
 export function sanitizeMetadata(str: string): string {
   return stripTerminalEscapes(str)

@@ -59,9 +59,9 @@ export interface Skill {
   name: string;
   description: string;
   path: string;
-  /** Raw SKILL.md content for hashing */
+  /** 用于哈希的原始 SKILL.md 内容 */
   rawContent?: string;
-  /** Name of the plugin this skill belongs to (if any) */
+  /** 所属插件名称（若有） */
   pluginName?: string;
   metadata?: Record<string, unknown>;
 }
@@ -70,10 +70,10 @@ export interface AgentConfig {
   name: string;
   displayName: string;
   skillsDir: string;
-  /** Global skills directory. Set to undefined if the agent doesn't support global installation. */
+  /** 全局技能目录；若 agent 不支持全局安装则为 undefined。 */
   globalSkillsDir: string | undefined;
   detectInstalled: () => Promise<boolean>;
-  /** Whether to show this agent in the universal agents list. Defaults to true. */
+  /** 是否在通用 agent 列表中显示；默认为 true。 */
   showInUniversalList?: boolean;
 }
 
@@ -83,28 +83,28 @@ export interface ParsedSource {
   subpath?: string;
   localPath?: string;
   ref?: string;
-  /** Skill name extracted from @skill syntax (e.g., owner/repo@skill-name) */
+  /** 从 @skill 语法提取的技能名（如 owner/repo@skill-name） */
   skillFilter?: string;
 }
 
 /**
- * Represents a skill fetched from a remote host provider.
+ * 从远程宿主 provider 获取的技能。
  */
 export interface RemoteSkill {
-  /** Display name of the skill (from frontmatter) */
+  /** 显示名称（来自 frontmatter） */
   name: string;
-  /** Description of the skill (from frontmatter) */
+  /** 描述（来自 frontmatter） */
   description: string;
-  /** Full markdown content including frontmatter */
+  /** 含 frontmatter 的完整 markdown 内容 */
   content: string;
-  /** The identifier used for installation directory name */
+  /** 安装目录名标识 */
   installName: string;
-  /** The original source URL */
+  /** 原始 source URL */
   sourceUrl: string;
-  /** The provider that fetched this skill */
+  /** 拉取该技能的 provider */
   providerId: string;
-  /** Source identifier for telemetry (e.g., "mintlify.com") */
+  /** 遥测用 source 标识（如 "mintlify.com"） */
   sourceIdentifier: string;
-  /** Any additional metadata from frontmatter */
+  /** frontmatter 中的其他元数据 */
   metadata?: Record<string, unknown>;
 }

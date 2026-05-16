@@ -5,15 +5,15 @@ import type { AgentType } from './types.ts';
 let cachedResult: AgentResult | null = null;
 
 /**
- * Map from @vercel/detect-agent names to skills-cli AgentType identifiers.
- * Only includes agents that exist in both systems.
+ * 将 @vercel/detect-agent 的名称映射为 skills-cli 的 AgentType 标识。
+ * 仅包含两套系统中都存在的 agent。
  */
 const agentNameToType: Record<string, AgentType> = {
   cursor: 'cursor',
   'cursor-cli': 'cursor',
   claude: 'claude-code',
   cowork: 'claude-code',
-  devin: 'universal', // Devin not in skills-cli agent list, use universal
+  devin: 'universal', // Devin 不在 skills-cli agent 列表中，回退到 universal
   replit: 'replit',
   gemini: 'gemini-cli',
   codex: 'codex',
@@ -24,8 +24,8 @@ const agentNameToType: Record<string, AgentType> = {
 };
 
 /**
- * Detect if the CLI is being run inside an AI agent environment.
- * Results are cached after the first call. Also updates telemetry with the agent name.
+ * 检测 CLI 是否在 AI agent 环境中运行。
+ * 首次调用后缓存结果，并用 agent 名称更新遥测。
  */
 export async function detectAgent(): Promise<AgentResult> {
   if (cachedResult) return cachedResult;
@@ -37,25 +37,23 @@ export async function detectAgent(): Promise<AgentResult> {
 }
 
 /**
- * Returns true if the CLI is running inside a detected AI agent.
- * When true, the CLI should skip interactive prompts and use sensible defaults.
+ * 若 CLI 在已检测到的 AI agent 内运行则返回 true。
+ * 此时应跳过交互式提示并使用合理默认值。
  */
 export async function isRunningInAgent(): Promise<boolean> {
   const result = await detectAgent();
   return result.isAgent;
 }
 
-/**
- * Returns the name of the detected agent, or null if not running in an agent.
- */
+/** 返回检测到的 agent 名称；若不在 agent 环境中则返回 null。 */
 export async function getAgentName(): Promise<string | null> {
   const result = await detectAgent();
   return result.isAgent ? result.agent.name : null;
 }
 
 /**
- * Maps a detected agent name to the corresponding skills-cli AgentType.
- * Returns null if the agent can't be mapped to a specific skills-cli agent.
+ * 将检测到的 agent 名称映射为对应的 skills-cli AgentType。
+ * 无法映射到具体 skills-cli agent 时返回 null。
  */
 export function getAgentType(agentName: string): AgentType | null {
   return agentNameToType[agentName] ?? null;

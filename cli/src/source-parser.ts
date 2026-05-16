@@ -2,54 +2,54 @@ import { isAbsolute, resolve } from 'path';
 import type { ParsedSource } from './types.ts';
 
 /**
- * Extract owner/repo (or group/subgroup/repo for GitLab) from a parsed source
- * for lockfile tracking and telemetry.
- * Returns null for local paths or unparseable sources.
- * Supports any Git host with an owner/repo URL structure, including GitLab subgroups.
+ * 从已解析的 source 提取 owner/repo（GitLab 可为 group/subgroup/repo），
+ * 用于 lockfile 与遥测。
+ * 本地路径或无法解析时返回 null。
+ * 支持具备 owner/repo URL 结构的任意 Git 宿主（含 GitLab 子组）。
  */
 export function getOwnerRepo(parsed: ParsedSource): string | null {
   if (parsed.type === 'local') {
     return null;
   }
 
-  // Handle Git SSH URLs (e.g., git@gitlab.com:owner/repo.git, git@github.com:owner/repo.git)
+  // Git SSH URL（如 git@gitlab.com:owner/repo.git、git@github.com:owner/repo.git）
   const sshMatch = parsed.url.match(/^git@[^:]+:(.+)$/);
   if (sshMatch) {
     let path = sshMatch[1]!;
     path = path.replace(/\.git$/, '');
 
-    // Must have at least owner/repo (one slash)
+    // 至少包含 owner/repo（一个斜杠）
     if (path.includes('/')) {
       return path;
     }
     return null;
   }
 
-  // Handle HTTP(S) URLs
+  // HTTP(S) URL
   if (!parsed.url.startsWith('http://') && !parsed.url.startsWith('https://')) {
     return null;
   }
 
   try {
     const url = new URL(parsed.url);
-    // Get pathname, remove leading slash and trailing .git
+    // 取 pathname，去掉 leading slash 与尾部 .git
     let path = url.pathname.slice(1);
     path = path.replace(/\.git$/, '');
 
-    // Must have at least owner/repo (one slash)
+    // 至少包含 owner/repo（一个斜杠）
     if (path.includes('/')) {
       return path;
     }
   } catch {
-    // Invalid URL
+    // 无效 URL
   }
 
   return null;
 }
 
 /**
- * Extract owner and repo from an owner/repo string.
- * Returns null if the format is invalid.
+ * 从 owner/repo 字符串解析 owner 与 repo。
+ * 格式无效时返回 null。
  */
 export function parseOwnerRepo(ownerRepo: string): { owner: string; repo: string } | null {
   const match = ownerRepo.match(/^([^/]+)\/([^/]+)$/);
@@ -60,37 +60,37 @@ export function parseOwnerRepo(ownerRepo: string): { owner: string; repo: string
 }
 
 /**
- * Check if a GitHub repository is private.
- * Returns true if private, false if public, null if unable to determine.
- * Only works for GitHub repositories (GitLab not supported).
+ * 检查 GitHub 仓库是否为私有。
+ * 私有返回 true，公开返回 false，无法判断返回 null。
+ * 仅支持 GitHub（不支持 GitLab）。
  */
 export async function isRepoPrivate(owner: string, repo: string): Promise<boolean | null> {
   try {
     const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
 
-    // If repo doesn't exist or we don't have access, assume private to be safe
+    // 仓库不存在或无权限时，为安全起见视为无法判断
     if (!res.ok) {
-      return null; // Unable to determine
+      return null; // 无法确定
     }
 
     const data = (await res.json()) as { private?: boolean };
     return data.private === true;
   } catch {
-    // On error, return null to indicate we couldn't determine
+    // 出错时返回 null 表示无法确定
     return null;
   }
 }
 
 /**
- * Sanitizes a subpath to prevent path traversal attacks.
- * Rejects subpaths containing ".." segments that could escape the repository root.
- * Returns the sanitized subpath, or throws if the subpath is unsafe.
+ * 清理 subpath，防止路径遍历攻击。
+ * 拒绝包含 ".." 段、可能逃出仓库根的 subpath。
+ * 返回清理后的 subpath；不安全时抛出错误。
  */
 export function sanitizeSubpath(subpath: string): string {
-  // Normalize to forward slashes for consistent handling
+  // 统一为正向斜杠
   const normalized = subpath.replace(/\\/g, '/');
 
-  // Check each segment for ".."
+  // 检查各段是否含 ".."
   const segments = normalized.split('/');
   for (const segment of segments) {
     if (segment === '..') {
@@ -104,9 +104,7 @@ export function sanitizeSubpath(subpath: string): string {
   return subpath;
 }
 
-/**
- * Check if a string represents a local file system path
- */
+/** 判断字符串是否为本地文件系统路径 */
 function isLocalPath(input: string): boolean {
   return (
     isAbsolute(input) ||
@@ -114,16 +112,16 @@ function isLocalPath(input: string): boolean {
     input.startsWith('../') ||
     input === '.' ||
     input === '..' ||
-    // Windows absolute paths like C:\ or D:\
+    // Windows 绝对路径，如 C:\ 或 D:\
     /^[a-zA-Z]:[/\\]/.test(input)
   );
 }
 
 /**
- * Parse a source string into a structured format
- * Supports: local paths, GitHub URLs, GitLab URLs, GitHub shorthand, well-known URLs, and direct git URLs
+ * 将 source 字符串解析为结构化格式。
+ * 支持：本地路径、GitHub/GitLab URL、GitHub 简写、well-known URL、直接 git URL。
  */
-// Source aliases: map common shorthand to canonical source
+// Source 别名：常见简写 → 规范 source
 const SOURCE_ALIASES: Record<string, string> = {
   'coinbase/agentWallet': 'coinbase/agentic-wallet-skills',
 };
@@ -152,17 +150,17 @@ function looksLikeGitSource(input: string): boolean {
       const parsed = new URL(input);
       const pathname = parsed.pathname;
 
-      // Only treat GitHub fragments as refs for repo/tree URLs.
+      // 仅对 repo/tree URL 将 GitHub fragment 视为 ref
       if (parsed.hostname === 'github.com') {
         return /^\/[^/]+\/[^/]+(?:\.git)?(?:\/tree\/[^/]+(?:\/.*)?)?\/?$/.test(pathname);
       }
 
-      // Only treat gitlab.com fragments as refs for repo/tree URLs.
+      // 仅对 repo/tree URL 将 gitlab.com fragment 视为 ref
       if (parsed.hostname === 'gitlab.com') {
         return /^\/.+?\/[^/]+(?:\.git)?(?:\/-\/tree\/[^/]+(?:\/.*)?)?\/?$/.test(pathname);
       }
     } catch {
-      // Fall through to generic checks below.
+      // 落入下方通用检查
     }
   }
 
@@ -187,8 +185,8 @@ function parseFragmentRef(input: string): FragmentRefResult {
   const inputWithoutFragment = input.slice(0, hashIndex);
   const fragment = input.slice(hashIndex + 1);
 
-  // Treat URL fragments as git refs only for git-like sources.
-  // This avoids changing behavior for generic well-known URLs.
+  // 仅对 git 类 source 将 URL fragment 视为 git ref，
+  // 避免改变通用 well-known URL 的行为
   if (!fragment || !looksLikeGitSource(inputWithoutFragment)) {
     return { inputWithoutFragment: input };
   }
@@ -218,13 +216,13 @@ function appendFragmentRef(input: string, ref?: string, skillFilter?: string): s
 }
 
 export function parseSource(input: string): ParsedSource {
-  // Local path: absolute, relative, or current directory
+  // 本地路径：绝对、相对或当前目录
   if (isLocalPath(input)) {
     const resolvedPath = resolve(input);
-    // Return local type even if path doesn't exist - we'll handle validation in main flow
+    // 即使路径不存在也返回 local — 在主流程中再校验
     return {
       type: 'local',
-      url: resolvedPath, // Store resolved path in url for consistency
+      url: resolvedPath, // 为一致性存入 url
       localPath: resolvedPath,
     };
   }
@@ -236,20 +234,20 @@ export function parseSource(input: string): ParsedSource {
   } = parseFragmentRef(input);
   input = inputWithoutFragment;
 
-  // Resolve source aliases before parsing
+  // 解析前先应用 source 别名
   const alias = SOURCE_ALIASES[input];
   if (alias) {
     input = alias;
   }
 
-  // Prefix shorthand: github:owner/repo -> owner/repo (handled by existing shorthand logic)
-  // Also supports github:owner/repo/subpath and github:owner/repo@skill
+  // 前缀简写：github:owner/repo → owner/repo（由现有简写逻辑处理）
+  // 亦支持 github:owner/repo/subpath、github:owner/repo@skill
   const githubPrefixMatch = input.match(/^github:(.+)$/);
   if (githubPrefixMatch) {
     return parseSource(appendFragmentRef(githubPrefixMatch[1]!, fragmentRef, fragmentSkillFilter));
   }
 
-  // Prefix shorthand: gitlab:owner/repo -> https://gitlab.com/owner/repo
+  // 前缀简写：gitlab:owner/repo → https://gitlab.com/owner/repo
   const gitlabPrefixMatch = input.match(/^gitlab:(.+)$/);
   if (gitlabPrefixMatch) {
     return parseSource(
@@ -261,7 +259,7 @@ export function parseSource(input: string): ParsedSource {
     );
   }
 
-  // GitHub URL with path: https://github.com/owner/repo/tree/branch/path/to/skill
+  // 带路径的 GitHub URL：https://github.com/owner/repo/tree/branch/path/to/skill
   const githubTreeWithPathMatch = input.match(/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)/);
   if (githubTreeWithPathMatch) {
     const [, owner, repo, ref, subpath] = githubTreeWithPathMatch;
@@ -273,7 +271,7 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // GitHub URL with branch only: https://github.com/owner/repo/tree/branch
+  // 仅分支的 GitHub URL：https://github.com/owner/repo/tree/branch
   const githubTreeMatch = input.match(/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)$/);
   if (githubTreeMatch) {
     const [, owner, repo, ref] = githubTreeMatch;
@@ -284,7 +282,7 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // GitHub URL: https://github.com/owner/repo
+  // GitHub URL：https://github.com/owner/repo
   const githubRepoMatch = input.match(/github\.com\/([^/]+)\/([^/]+)/);
   if (githubRepoMatch) {
     const [, owner, repo] = githubRepoMatch;
@@ -296,9 +294,9 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // GitLab URL with path (any GitLab instance): https://gitlab.com/owner/repo/-/tree/branch/path
-  // Key identifier is the "/-/tree/" path pattern unique to GitLab.
-  // Supports subgroups by using a non-greedy match for the repository path.
+  // 带路径的 GitLab URL（任意实例）：https://gitlab.com/owner/repo/-/tree/branch/path
+  // 关键标识为 GitLab 特有的 "/-/tree/" 路径模式
+  // 用非贪婪匹配支持子组仓库路径
   const gitlabTreeWithPathMatch = input.match(
     /^(https?):\/\/([^/]+)\/(.+?)\/-\/tree\/([^/]+)\/(.+)/
   );
@@ -314,7 +312,7 @@ export function parseSource(input: string): ParsedSource {
     }
   }
 
-  // GitLab URL with branch only (any GitLab instance): https://gitlab.com/owner/repo/-/tree/branch
+  // 仅分支的 GitLab URL（任意实例）：https://gitlab.com/owner/repo/-/tree/branch
   const gitlabTreeMatch = input.match(/^(https?):\/\/([^/]+)\/(.+?)\/-\/tree\/([^/]+)$/);
   if (gitlabTreeMatch) {
     const [, protocol, hostname, repoPath, ref] = gitlabTreeMatch;
@@ -327,13 +325,13 @@ export function parseSource(input: string): ParsedSource {
     }
   }
 
-  // GitLab.com URL: https://gitlab.com/owner/repo or https://gitlab.com/group/subgroup/repo
-  // Only for the official gitlab.com domain for user convenience.
-  // Supports nested subgroups (e.g., gitlab.com/group/subgroup1/subgroup2/repo).
+  // GitLab.com URL：https://gitlab.com/owner/repo 或 group/subgroup/repo
+  // 仅官方 gitlab.com 域，便于用户使用
+  // 支持嵌套子组（如 gitlab.com/group/subgroup1/subgroup2/repo）
   const gitlabRepoMatch = input.match(/gitlab\.com\/(.+?)(?:\.git)?\/?$/);
   if (gitlabRepoMatch) {
     const repoPath = gitlabRepoMatch[1]!;
-    // Must have at least owner/repo (one slash)
+    // 至少 owner/repo（一个斜杠）
     if (repoPath.includes('/')) {
       return {
         type: 'gitlab',
@@ -343,9 +341,9 @@ export function parseSource(input: string): ParsedSource {
     }
   }
 
-  // GitHub shorthand: owner/repo, owner/repo/path/to/skill, or owner/repo@skill-name
-  // Exclude paths that start with . or / to avoid matching local paths
-  // First check for @skill syntax: owner/repo@skill-name
+  // GitHub 简写：owner/repo、owner/repo/path/to/skill、owner/repo@skill-name
+  // 排除以 . 或 / 开头的路径，避免匹配本地路径
+  // 先检查 @skill：owner/repo@skill-name
   const atSkillMatch = input.match(/^([^/]+)\/([^/@]+)@(.+)$/);
   if (atSkillMatch && !input.includes(':') && !input.startsWith('.') && !input.startsWith('/')) {
     const [, owner, repo, skillFilter] = atSkillMatch;
@@ -369,9 +367,9 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // Well-known skills: arbitrary HTTP(S) URLs that aren't GitHub/GitLab
-  // This is the final fallback for URLs - we'll check for /.well-known/agent-skills/index.json
-  // then fall back to /.well-known/skills/index.json
+  // Well-known 技能：非 GitHub/GitLab 的任意 HTTP(S) URL
+  // 最终回退：先查 /.well-known/agent-skills/index.json，
+  // 再回退到 /.well-known/skills/index.json
   if (isWellKnownUrl(input)) {
     return {
       type: 'well-known',
@@ -379,7 +377,7 @@ export function parseSource(input: string): ParsedSource {
     };
   }
 
-  // Fallback: treat as direct git URL
+  // 回退：视为直接 git URL
   return {
     type: 'git',
     url: input,
@@ -388,9 +386,9 @@ export function parseSource(input: string): ParsedSource {
 }
 
 /**
- * Check if a URL could be a well-known skills endpoint.
- * Must be HTTP(S) and not a known git host (GitHub, GitLab).
- * Also excludes URLs that look like git repos (.git suffix).
+ * 判断 URL 是否可能为 well-known 技能端点。
+ * 须为 HTTP(S)，且非已知 git 宿主（GitHub、GitLab）。
+ * 亦排除形似 git 仓库的 URL（.git 后缀）。
  */
 function isWellKnownUrl(input: string): boolean {
   if (!input.startsWith('http://') && !input.startsWith('https://')) {
@@ -400,13 +398,13 @@ function isWellKnownUrl(input: string): boolean {
   try {
     const parsed = new URL(input);
 
-    // Exclude known git hosts that have their own handling
+    // 排除已有专门处理的 git 宿主
     const excludedHosts = ['github.com', 'gitlab.com', 'raw.githubusercontent.com'];
     if (excludedHosts.includes(parsed.hostname)) {
       return false;
     }
 
-    // Don't match URLs that look like git repos (should be handled by git type)
+    // 不匹配形似 git 仓库的 URL（应由 git 类型处理）
     if (input.endsWith('.git')) {
       return false;
     }

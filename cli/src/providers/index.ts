@@ -1,10 +1,10 @@
-// Export types
+// 导出类型
 export type { HostProvider, ProviderMatch, ProviderRegistry, RemoteSkill } from './types.ts';
 
-// Export registry functions
+// 导出注册表函数
 export { registry, registerProvider, findProvider, getProviders } from './registry.ts';
 
-// Export individual providers
+// 导出各 provider 实现
 export {
   WellKnownProvider,
   wellKnownProvider,

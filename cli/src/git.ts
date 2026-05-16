@@ -3,13 +3,53 @@ import { join, normalize, resolve, sep } from 'path';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 
-const DEFAULT_CLONE_TIMEOUT_MS = 300_000; // 5 minutes
+const DEFAULT_CLONE_TIMEOUT_MS = 300_000; // 5 分钟
 const CLONE_TIMEOUT_MS = (() => {
   const raw = process.env.SKILLS_CLONE_TIMEOUT_MS;
   if (!raw) return DEFAULT_CLONE_TIMEOUT_MS;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_CLONE_TIMEOUT_MS;
 })();
+
+/** 克隆时安全传给 git 的环境变量（避免 simple-git 拦截 EDITOR 等）。 */
+const GIT_CLONE_ENV_KEYS = [
+  'PATH',
+  'HOME',
+  'USERPROFILE',
+  'HOMEDRIVE',
+  'HOMEPATH',
+  'SYSTEMROOT',
+  'WINDIR',
+  'TEMP',
+  'TMP',
+  'APPDATA',
+  'LOCALAPPDATA',
+  'PROGRAMFILES',
+  'HTTP_PROXY',
+  'HTTPS_PROXY',
+  'ALL_PROXY',
+  'NO_PROXY',
+  'http_proxy',
+  'https_proxy',
+  'all_proxy',
+  'no_proxy',
+  'GIT_SSH_COMMAND',
+  'SSH_AUTH_SOCK',
+  // 不传 GIT_ASKPASS：Cursor/IDE 会设置它，simple-git 3.36+ 需 allowUnsafeAskPass；
+  // 公开仓库克隆用 GIT_TERMINAL_PROMPT=0 即可，无需交互式凭据。
+] as const;
+
+function gitCloneEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    GIT_TERMINAL_PROMPT: '0',
+    GIT_LFS_SKIP_SMUDGE: '1',
+  };
+  for (const key of GIT_CLONE_ENV_KEYS) {
+    const value = process.env[key];
+    if (value !== undefined) env[key] = value;
+  }
+  return env;
+}
 
 export class GitCloneError extends Error {
   readonly url: string;
@@ -27,42 +67,40 @@ export class GitCloneError extends Error {
 
 export async function cloneRepo(url: string, ref?: string): Promise<string> {
   const tempDir = await mkdtemp(join(tmpdir(), 'skills-'));
+  // `env` 不是构造函数选项 — 请在实例上使用 .env()（见 SimpleGit.env）。
   const git = simpleGit({
     timeout: { block: CLONE_TIMEOUT_MS },
-    env: {
-      ...process.env,
-      GIT_TERMINAL_PROMPT: '0',
-      // When git-lfs IS installed, tell it not to download LFS content
-      // during checkout. See #952 for context and empirical impact.
-      GIT_LFS_SKIP_SMUDGE: '1',
+    // simple-git 3.36+ 默认禁止 -c filter.*，需显式开启。
+    // 下列值由本 CLI 设置（空值 = 禁用 LFS 过滤器），非来自远程仓库
+    // — 见 @simple-git/argv-parser 中的 allowUnsafeFilter。
+    unsafe: {
+      allowUnsafeFilter: true,
     },
-    // When git-lfs is NOT installed, GIT_LFS_SKIP_SMUDGE has no effect —
-    // git sees `filter=lfs` in .gitattributes, tries to run
-    // `git-lfs filter-process`, and aborts the checkout with:
+    // 未安装 git-lfs 时，GIT_LFS_SKIP_SMUDGE 无效 —
+    // git 在 .gitattributes 中看到 `filter=lfs` 会尝试运行
+    // `git-lfs filter-process`，checkout 失败，例如：
     //   git-lfs filter-process: git-lfs: command not found
     //   fatal: the remote end hung up unexpectedly
     //   warning: Clone succeeded, but checkout failed.
-    // Overriding filter.lfs.* at the command level disables the filter
-    // entirely for this clone, so checkout succeeds regardless of whether
-    // git-lfs is installed. LFS-tracked files are left as ~130-byte
-    // pointer files, which the skills installer doesn't read anyway
-    // (skills are plain text — HTML/MD/JSON — never LFS-tracked).
+    // 在命令级覆盖 filter.lfs.* 可完全禁用过滤器，使 checkout 成功，
+    // 与是否安装 git-lfs 无关。LFS 文件会保留为约 130 字节的指针文件，
+    // 技能安装器不会读取它们（技能为纯文本 HTML/MD/JSON，不走 LFS）。
     //
-    // Reported downstream: heygen-com/hyperframes#407.
+    // 下游反馈：heygen-com/hyperframes#407。
     config: [
       'filter.lfs.required=false',
       'filter.lfs.smudge=',
       'filter.lfs.clean=',
       'filter.lfs.process=',
     ],
-  });
+  }).env(gitCloneEnv());
   const cloneOptions = ref ? ['--depth', '1', '--branch', ref] : ['--depth', '1'];
 
   try {
     await git.clone(url, tempDir, cloneOptions);
     return tempDir;
   } catch (error) {
-    // Clean up temp dir on failure
+    // 失败时清理临时目录
     await rm(tempDir, { recursive: true, force: true }).catch(() => {});
 
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -105,7 +143,7 @@ export async function cloneRepo(url: string, ref?: string): Promise<string> {
 }
 
 export async function cleanupTempDir(dir: string): Promise<void> {
-  // Validate that the directory path is within tmpdir to prevent deletion of arbitrary paths
+  // 校验目录在 tmpdir 内，防止删除任意路径
   const normalizedDir = normalize(resolve(dir));
   const normalizedTmpDir = normalize(resolve(tmpdir()));
 

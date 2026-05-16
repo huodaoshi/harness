@@ -25,16 +25,11 @@ Aliases: `skills a` works for `add`. `skills i`, `skills install` (no args) rest
 ```
 src/
 ├── cli.ts           # Main entry point, command routing, init/check/update
-├── cli.test.ts      # CLI tests
 ├── add.ts           # Core add command logic
-├── add-prompt.test.ts # Add prompt behavior tests
-├── add.test.ts      # Add command tests
 ├── constants.ts      # Shared constants
 ├── find.ts           # Find/search command
 ├── list.ts          # List installed skills command
-├── list.test.ts     # List command tests
 ├── remove.ts         # Remove command implementation
-├── remove.test.ts    # Remove command tests
 ├── agents.ts        # Agent definitions and detection
 ├── installer.ts     # Skill installation logic (symlink/copy) + listInstalledSkills
 ├── skills.ts        # Skill discovery and parsing
@@ -56,10 +51,16 @@ src/
 │   ├── huggingface.ts
 │   ├── mintlify.ts
 │   └── wellknown.ts
-├── init.test.ts     # Init command tests
-└── test-utils.ts    # Test utilities
-
 tests/
+├── test-utils.ts            # CLI subprocess test helpers
+├── add.test.ts              # Add command tests
+├── add-prompt.test.ts       # Add prompt behavior tests
+├── cli.test.ts              # CLI tests
+├── init.test.ts             # Init command tests
+├── list.test.ts             # List command tests
+├── remove.test.ts           # Remove command tests
+├── update-source.test.ts    # Update source formatting tests
+├── source-parser-gitlab.test.ts # GitLab / git URL parser tests
 ├── cross-platform-paths.test.ts # Path normalization across platforms
 ├── full-depth-discovery.test.ts # --full-depth skill discovery tests
 ├── openclaw-paths.test.ts       # OpenClaw-specific path tests

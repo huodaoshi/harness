@@ -4,7 +4,7 @@ class ProviderRegistryImpl implements ProviderRegistry {
   private providers: HostProvider[] = [];
 
   register(provider: HostProvider): void {
-    // Check for duplicate IDs
+    // 检查重复 ID
     if (this.providers.some((p) => p.id === provider.id)) {
       throw new Error(`Provider with id "${provider.id}" already registered`);
     }
@@ -26,26 +26,20 @@ class ProviderRegistryImpl implements ProviderRegistry {
   }
 }
 
-// Singleton registry instance
+// 单例注册表
 export const registry = new ProviderRegistryImpl();
 
-/**
- * Register a provider with the global registry.
- */
+/** 向全局注册表注册 provider。 */
 export function registerProvider(provider: HostProvider): void {
   registry.register(provider);
 }
 
-/**
- * Find a provider that matches the given URL.
- */
+/** 查找匹配给定 URL 的 provider。 */
 export function findProvider(url: string): HostProvider | null {
   return registry.findProvider(url);
 }
 
-/**
- * Get all registered providers.
- */
+/** 获取所有已注册的 provider。 */
 export function getProviders(): HostProvider[] {
   return registry.getProviders();
 }

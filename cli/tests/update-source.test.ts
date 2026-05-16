@@ -3,7 +3,7 @@ import {
   buildLocalUpdateSource,
   buildUpdateInstallSource,
   formatSourceInput,
-} from './update-source.ts';
+} from '../src/update-source.ts';
 
 describe('update-source', () => {
   describe('formatSourceInput', () => {

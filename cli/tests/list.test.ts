@@ -3,7 +3,7 @@ import { existsSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir, homedir } from 'os';
 import { runCli } from './test-utils.ts';
-import { parseListOptions } from './list.ts';
+import { parseListOptions } from '../src/list.ts';
 
 describe('list command', () => {
   let testDir: string;

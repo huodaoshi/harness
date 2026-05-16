@@ -6,62 +6,56 @@ import { execSync } from 'child_process';
 
 const AGENTS_DIR = '.agents';
 const LOCK_FILE = '.skill-lock.json';
-const CURRENT_VERSION = 3; // Bumped from 2 to 3 for folder hash support (GitHub tree SHA)
+const CURRENT_VERSION = 3; // 自 v2 升至 v3：支持文件夹哈希（GitHub tree SHA）
 
-/**
- * Represents a single installed skill entry in the lock file.
- */
+/** 全局 lock 文件中的单条已安装技能。 */
 export interface SkillLockEntry {
-  /** Normalized source identifier (e.g., "owner/repo", "mintlify/bun.com") */
+  /** 规范化的 source 标识（如 "owner/repo"、"mintlify/bun.com"） */
   source: string;
-  /** The provider/source type (e.g., "github", "mintlify", "huggingface", "local") */
+  /** provider/来源类型（如 "github"、"mintlify"、"huggingface"、"local"） */
   sourceType: string;
-  /** The original URL used to install the skill (for re-fetching updates) */
+  /** 安装时使用的原始 URL（用于拉取更新） */
   sourceUrl: string;
-  /** Branch or tag ref used for installation (for ref-aware updates) */
+  /** 安装使用的分支或标签 ref（用于按 ref 更新） */
   ref?: string;
-  /** Subpath within the source repo, if applicable */
+  /** 源仓库内的子路径（若有） */
   skillPath?: string;
   /**
-   * GitHub tree SHA for the entire skill folder.
-   * This hash changes when ANY file in the skill folder changes.
-   * Fetched via GitHub Trees API by the telemetry server.
+   * 整个技能文件夹的 GitHub tree SHA。
+   * 文件夹内任意文件变更都会改变此哈希。
+   * 由遥测服务通过 GitHub Trees API 获取。
    */
   skillFolderHash: string;
-  /** ISO timestamp when the skill was first installed */
+  /** 首次安装的 ISO 时间戳 */
   installedAt: string;
-  /** ISO timestamp when the skill was last updated */
+  /** 最后更新的 ISO 时间戳 */
   updatedAt: string;
-  /** Name of the plugin this skill belongs to (if any) */
+  /** 所属插件名称（若有） */
   pluginName?: string;
 }
 
-/**
- * Tracks dismissed prompts so they're not shown again.
- */
+/** 记录已关闭的提示，避免再次显示。 */
 export interface DismissedPrompts {
-  /** Dismissed the find-skills skill installation prompt */
+  /** 已关闭 find-skills 安装提示 */
   findSkillsPrompt?: boolean;
 }
 
-/**
- * The structure of the skill lock file.
- */
+/** 技能 lock 文件结构。 */
 export interface SkillLockFile {
-  /** Schema version for future migrations */
+  /** 模式版本，便于未来迁移 */
   version: number;
-  /** Map of skill name to its lock entry */
+  /** 技能名 → lock 条目 */
   skills: Record<string, SkillLockEntry>;
-  /** Tracks dismissed prompts */
+  /** 已关闭的提示 */
   dismissed?: DismissedPrompts;
-  /** Last selected agents for installation */
+  /** 上次安装时选择的 agent */
   lastSelectedAgents?: string[];
 }
 
 /**
- * Get the path to the global skill lock file.
- * Use $XDG_STATE_HOME/skills/.skill-lock.json if set.
- * otherwise fall back to ~/.agents/.skill-lock.json
+ * 获取全局技能 lock 文件路径。
+ * 若设置 $XDG_STATE_HOME，则用 $XDG_STATE_HOME/skills/.skill-lock.json；
+ * 否则回退到 ~/.agents/.skill-lock.json。
  */
 export function getSkillLockPath(): string {
   const xdgStateHome = process.env.XDG_STATE_HOME;
@@ -72,9 +66,8 @@ export function getSkillLockPath(): string {
 }
 
 /**
- * Read the skill lock file.
- * Returns an empty lock file structure if the file doesn't exist.
- * Wipes the lock file if it's an old format (version < CURRENT_VERSION).
+ * 读取技能 lock 文件。
+ * 不存在时返回空结构；旧格式（version < CURRENT_VERSION）会清空 lock。
  */
 export async function readSkillLock(): Promise<SkillLockFile> {
   const lockPath = getSkillLockPath();
@@ -83,69 +76,64 @@ export async function readSkillLock(): Promise<SkillLockFile> {
     const content = await readFile(lockPath, 'utf-8');
     const parsed = JSON.parse(content) as SkillLockFile;
 
-    // Validate version - wipe if old format
+    // 校验版本 — 旧格式则清空
     if (typeof parsed.version !== 'number' || !parsed.skills) {
       return createEmptyLockFile();
     }
 
-    // If old version, wipe and start fresh (backwards incompatible change)
-    // v3 adds skillFolderHash - we want fresh installs to populate it
+    // 旧版本不兼容，重新开始（v3 增加 skillFolderHash，需全新安装以填充）
     if (parsed.version < CURRENT_VERSION) {
       return createEmptyLockFile();
     }
 
     return parsed;
-  } catch (error) {
-    // File doesn't exist or is invalid - return empty
+  } catch {
+    // 文件不存在或无效
     return createEmptyLockFile();
   }
 }
 
 /**
- * Write the skill lock file.
- * Creates the directory if it doesn't exist.
+ * 写入技能 lock 文件。
+ * 若目录不存在则创建。
  */
 export async function writeSkillLock(lock: SkillLockFile): Promise<void> {
   const lockPath = getSkillLockPath();
 
-  // Ensure directory exists
+  // 确保目录存在
   await mkdir(dirname(lockPath), { recursive: true });
 
-  // Write with pretty formatting for human readability
+  // 格式化输出，便于人工阅读
   const content = JSON.stringify(lock, null, 2);
   await writeFile(lockPath, content, 'utf-8');
 }
 
-/**
- * Compute SHA-256 hash of content.
- */
+/** 计算内容的 SHA-256 哈希。 */
 export function computeContentHash(content: string): string {
   return createHash('sha256').update(content, 'utf-8').digest('hex');
 }
 
 let _ghWarningShown = false;
 
-/** For tests only. Resets the one-shot warning flag. */
+/** 仅测试用：重置一次性警告标记。 */
 export function resetGhAuthWarning(): void {
   _ghWarningShown = false;
 }
 
 /**
- * Get GitHub token from user's environment.
- * Tries in order:
- * 1. GITHUB_TOKEN environment variable (silent)
- * 2. GH_TOKEN environment variable (silent)
- * 3. gh CLI auth token, if gh is installed. Prints a one-time warning to
- *    stderr before invoking `gh auth token`, because that subprocess call
- *    is flagged by some corporate endpoint security tooling (Defender, etc.)
- *    as credential extraction. Callers should invoke this function lazily
- *    (e.g. only after an unauthenticated request hits a rate limit) so the
- *    fallback rarely runs in practice.
+ * 从用户环境获取 GitHub token。
+ * 依次尝试：
+ * 1. 环境变量 GITHUB_TOKEN（静默）
+ * 2. 环境变量 GH_TOKEN（静默）
+ * 3. 若已安装 gh，则 `gh auth token`；调用前会向 stderr 打印一次性警告，
+ *    因部分企业终端安全工具会将该子进程视为凭据提取。
+ *    调用方应惰性调用（如未认证请求触发限流后再取 token），
+ *    实践中很少走到此回退。
  *
- * @returns The token string or null if not available
+ * @returns token 字符串，不可用则 null
  */
 export function getGitHubToken(): string | null {
-  // Check environment variables first (silent: user has explicitly opted in)
+  // 先查环境变量（用户已显式配置）
   if (process.env.GITHUB_TOKEN) {
     return process.env.GITHUB_TOKEN;
   }
@@ -153,7 +141,7 @@ export function getGitHubToken(): string | null {
     return process.env.GH_TOKEN;
   }
 
-  // Last resort: spawn gh CLI. Warn the user once per process before doing so.
+  // 最后回退：启动 gh CLI；每进程仅警告一次
   if (!_ghWarningShown) {
     process.stderr.write(
       'warn: GitHub API rate limit reached; reading a token via `gh auth token`.\n' +
@@ -170,23 +158,21 @@ export function getGitHubToken(): string | null {
       return token;
     }
   } catch {
-    // gh not installed or not authenticated
+    // gh 未安装或未登录
   }
 
   return null;
 }
 
 /**
- * Fetch the tree SHA (folder hash) for a skill folder using GitHub's Trees API.
- * This makes ONE API call to get the entire repo tree, then extracts the SHA
- * for the specific skill folder.
+ * 用 GitHub Trees API 获取技能文件夹的 tree SHA（文件夹哈希）。
+ * 一次 API 调用拉取整棵仓库树，再提取指定技能文件夹的 SHA。
  *
- * @param ownerRepo - GitHub owner/repo (e.g., "vercel-labs/agent-skills")
- * @param skillPath - Path to skill folder or SKILL.md (e.g., "skills/react-best-practices/SKILL.md")
- * @param getToken - Optional lazy token resolver. Invoked only if the
- *                   unauthenticated request hits a rate limit.
- * @param ref - Optional branch/tag ref. Defaults to trying main then master.
- * @returns The tree SHA for the skill folder, or null if not found
+ * @param ownerRepo - GitHub owner/repo（如 "vercel-labs/agent-skills"）
+ * @param skillPath - 技能文件夹或 SKILL.md 路径（如 "skills/react-best-practices/SKILL.md"）
+ * @param getToken - 可选惰性 token 解析器；未认证限流时才调用
+ * @param ref - 可选分支/标签；默认尝试 main 再 master
+ * @returns 技能文件夹的 tree SHA，未找到则 null
  */
 export async function fetchSkillFolderHash(
   ownerRepo: string,
@@ -200,9 +186,7 @@ export async function fetchSkillFolderHash(
   return getSkillFolderHashFromTree(tree, skillPath);
 }
 
-/**
- * Add or update a skill entry in the lock file.
- */
+/** 在 lock 中新增或更新技能条目。 */
 export async function addSkillToLock(
   skillName: string,
   entry: Omit<SkillLockEntry, 'installedAt' | 'updatedAt'>
@@ -221,9 +205,7 @@ export async function addSkillToLock(
   await writeSkillLock(lock);
 }
 
-/**
- * Remove a skill from the lock file.
- */
+/** 从 lock 移除技能。 */
 export async function removeSkillFromLock(skillName: string): Promise<boolean> {
   const lock = await readSkillLock();
 
@@ -236,25 +218,19 @@ export async function removeSkillFromLock(skillName: string): Promise<boolean> {
   return true;
 }
 
-/**
- * Get a skill entry from the lock file.
- */
+/** 从 lock 读取单条技能。 */
 export async function getSkillFromLock(skillName: string): Promise<SkillLockEntry | null> {
   const lock = await readSkillLock();
   return lock.skills[skillName] ?? null;
 }
 
-/**
- * Get all skills from the lock file.
- */
+/** 读取 lock 中全部技能。 */
 export async function getAllLockedSkills(): Promise<Record<string, SkillLockEntry>> {
   const lock = await readSkillLock();
   return lock.skills;
 }
 
-/**
- * Get skills grouped by source for batch update operations.
- */
+/** 按 source 分组技能，用于批量 update。 */
 export async function getSkillsBySource(): Promise<
   Map<string, { skills: string[]; entry: SkillLockEntry }>
 > {
@@ -273,9 +249,7 @@ export async function getSkillsBySource(): Promise<
   return bySource;
 }
 
-/**
- * Create an empty lock file structure.
- */
+/** 创建空 lock 结构。 */
 function createEmptyLockFile(): SkillLockFile {
   return {
     version: CURRENT_VERSION,
@@ -284,17 +258,13 @@ function createEmptyLockFile(): SkillLockFile {
   };
 }
 
-/**
- * Check if a prompt has been dismissed.
- */
+/** 检查某提示是否已关闭。 */
 export async function isPromptDismissed(promptKey: keyof DismissedPrompts): Promise<boolean> {
   const lock = await readSkillLock();
   return lock.dismissed?.[promptKey] === true;
 }
 
-/**
- * Mark a prompt as dismissed.
- */
+/** 将某提示标记为已关闭。 */
 export async function dismissPrompt(promptKey: keyof DismissedPrompts): Promise<void> {
   const lock = await readSkillLock();
   if (!lock.dismissed) {
@@ -304,17 +274,13 @@ export async function dismissPrompt(promptKey: keyof DismissedPrompts): Promise<
   await writeSkillLock(lock);
 }
 
-/**
- * Get the last selected agents.
- */
+/** 获取上次选择的 agent 列表。 */
 export async function getLastSelectedAgents(): Promise<string[] | undefined> {
   const lock = await readSkillLock();
   return lock.lastSelectedAgents;
 }
 
-/**
- * Save the selected agents to the lock file.
- */
+/** 将所选 agent 保存到 lock 文件。 */
 export async function saveSelectedAgents(agents: string[]): Promise<void> {
   const lock = await readSkillLock();
   lock.lastSelectedAgents = agents;

@@ -1,9 +1,9 @@
 import { parse as parseYaml } from 'yaml';
 
 /**
- * Minimal frontmatter parser. Only supports YAML (the `---` delimiter).
- * Does NOT support `---js` / `---javascript` to avoid eval()-based RCE
- * that exists in gray-matter's built-in JS engine.
+ * 精简的 frontmatter 解析器。仅支持 YAML（`---` 分隔符）。
+ * 不支持 `---js` / `---javascript`，以避免 gray-matter 内置 JS 引擎
+ * 中基于 eval() 的远程代码执行（RCE）风险。
  */
 export function parseFrontmatter(raw: string): {
   data: Record<string, unknown>;

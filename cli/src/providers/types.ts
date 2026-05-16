@@ -1,97 +1,90 @@
 /**
- * Represents a parsed skill from a remote host.
- * Different hosts may have different ways of identifying skills.
+ * 从远程宿主解析得到的技能。
+ * 不同宿主识别技能的方式可能不同。
  */
 export interface RemoteSkill {
-  /** Display name of the skill (from frontmatter) */
+  /** 显示名称（来自 frontmatter） */
   name: string;
-  /** Description of the skill (from frontmatter) */
+  /** 描述（来自 frontmatter） */
   description: string;
-  /** Full markdown content including frontmatter */
+  /** 含 frontmatter 的完整 markdown 内容 */
   content: string;
-  /** The identifier used for installation directory name */
+  /** 安装目录名标识 */
   installName: string;
-  /** The original source URL */
+  /** 原始 source URL */
   sourceUrl: string;
-  /** Any additional metadata from frontmatter */
+  /** frontmatter 中的其他元数据 */
   metadata?: Record<string, unknown>;
 }
 
 /**
- * Result of attempting to match a URL to a provider.
+ * URL 与 provider 匹配尝试的结果。
  */
 export interface ProviderMatch {
-  /** Whether the URL matches this provider */
+  /** URL 是否匹配该 provider */
   matches: boolean;
-  /** The source identifier for telemetry/storage (e.g., "mintlify/bun.com", "huggingface/hf-skills/hf-jobs") */
+  /** 遥测/存储用 source 标识（如 "mintlify/bun.com"、"huggingface/hf-skills/hf-jobs"） */
   sourceIdentifier?: string;
 }
 
 /**
- * Interface for remote SKILL.md host providers.
- * Each provider knows how to:
- * - Detect if a URL belongs to it
- * - Fetch and parse SKILL.md files
- * - Convert URLs to raw content URLs
- * - Provide source identifiers for telemetry
+ * 远程 SKILL.md 宿主 provider 接口。
+ * 每个 provider 需能：
+ * - 判断 URL 是否属于本宿主
+ * - 拉取并解析 SKILL.md
+ * - 将 URL 转为 raw 内容 URL
+ * - 提供遥测用 source 标识
  */
 export interface HostProvider {
-  /** Unique identifier for this provider (e.g., "mintlify", "huggingface", "github") */
+  /** 唯一 ID（如 "mintlify"、"huggingface"、"github"） */
   readonly id: string;
 
-  /** Display name for this provider */
+  /** 显示名称 */
   readonly displayName: string;
 
   /**
-   * Check if a URL matches this provider.
-   * @param url - The URL to check
-   * @returns Match result with optional source identifier
+   * 判断 URL 是否匹配本 provider。
+   * @param url - 待检查的 URL
+   * @returns 匹配结果，可含 source 标识
    */
   match(url: string): ProviderMatch;
 
   /**
-   * Fetch and parse a SKILL.md file from the given URL.
-   * @param url - The URL to the SKILL.md file
-   * @returns The parsed skill or null if invalid/not found
+   * 从给定 URL 拉取并解析 SKILL.md。
+   * @param url - SKILL.md 的 URL
+   * @returns 解析后的技能；无效或未找到时返回 null
    */
   fetchSkill(url: string): Promise<RemoteSkill | null>;
 
   /**
-   * Convert a user-facing URL to a raw content URL.
-   * For example, GitHub blob URLs to raw.githubusercontent.com URLs.
-   * @param url - The URL to convert
-   * @returns The raw content URL
+   * 将面向用户的 URL 转为 raw 内容 URL。
+   * 例如 GitHub blob URL → raw.githubusercontent.com。
+   * @param url - 待转换 URL
+   * @returns raw 内容 URL
    */
   toRawUrl(url: string): string;
 
   /**
-   * Get the source identifier for telemetry/storage.
-   * This should be a stable identifier that can be used to group
-   * skills from the same source.
-   * @param url - The original URL
-   * @returns Source identifier (e.g., "mintlify/bun.com", "huggingface/hf-skills/hf-jobs")
+   * 获取遥测/存储用 source 标识。
+   * 应为稳定标识，便于按来源分组技能。
+   * @param url - 原始 URL
+   * @returns source 标识（如 "mintlify/bun.com"）
    */
   getSourceIdentifier(url: string): string;
 }
 
-/**
- * Registry for managing host providers.
- */
+/** 宿主 provider 注册表。 */
 export interface ProviderRegistry {
-  /**
-   * Register a new provider.
-   */
+  /** 注册新 provider。 */
   register(provider: HostProvider): void;
 
   /**
-   * Find a provider that matches the given URL.
-   * @param url - The URL to match
-   * @returns The matching provider or null
+   * 查找匹配给定 URL 的 provider。
+   * @param url - 待匹配 URL
+   * @returns 匹配的 provider，无则 null
    */
   findProvider(url: string): HostProvider | null;
 
-  /**
-   * Get all registered providers.
-   */
+  /** 获取所有已注册 provider。 */
   getProviders(): HostProvider[];
 }

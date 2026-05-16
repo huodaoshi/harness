@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { promptForAgents } from './add.js';
-import * as skillLock from './skill-lock.js';
-import * as searchMultiselectModule from './prompts/search-multiselect.js';
+import { promptForAgents } from '../src/add.ts';
+import * as skillLock from '../src/skill-lock.ts';
+import * as searchMultiselectModule from '../src/prompts/search-multiselect.ts';
 
 // Mock dependencies
-vi.mock('./skill-lock.js');
-vi.mock('./prompts/search-multiselect.js');
-vi.mock('./telemetry.js', () => ({
+vi.mock('../src/skill-lock.ts');
+vi.mock('../src/prompts/search-multiselect.ts');
+vi.mock('../src/telemetry.ts', () => ({
   setVersion: vi.fn(),
   track: vi.fn(),
 }));

@@ -7,12 +7,12 @@ interface InstallTelemetryData {
   skills: string;
   agents: string;
   global?: '1';
-  skillFiles?: string; // JSON stringified { skillName: relativePath }
+  skillFiles?: string; // JSON 序列化：{ skillName: relativePath }
   /**
-   * Source type for different hosts:
-   * - 'github': GitHub repository (default, uses raw.githubusercontent.com)
-   * - 'raw': Direct URL to SKILL.md (generic raw URL)
-   * - Provider IDs like 'mintlify', 'huggingface', etc.
+   * 不同宿主的 source 类型：
+   * - 'github'：GitHub 仓库（默认，使用 raw.githubusercontent.com）
+   * - 'raw'：SKILL.md 直链（通用 raw URL）
+   * - 以及 'mintlify'、'huggingface' 等 provider ID
    */
   sourceType?: string;
 }
@@ -59,8 +59,8 @@ let cliVersion: string | null = null;
 let detectedAgentName: string | null = null;
 
 /**
- * Set the detected AI agent name for telemetry tracking.
- * Called once during agent detection, then included in all telemetry events.
+ * 设置检测到的 AI agent 名称用于遥测。
+ * 在 agent 检测时调用一次，随后包含在所有遥测事件中。
  */
 export function setDetectedAgent(agentName: string | null): void {
   detectedAgentName = agentName;
@@ -87,7 +87,7 @@ export function setVersion(version: string): void {
   cliVersion = version;
 }
 
-// ─── Security audit data ───
+// ─── 安全审计数据 ───
 
 export interface PartnerAudit {
   risk: 'safe' | 'low' | 'medium' | 'high' | 'critical' | 'unknown';
@@ -100,8 +100,8 @@ export type SkillAuditData = Record<string, PartnerAudit>;
 export type AuditResponse = Record<string, SkillAuditData>;
 
 /**
- * Fetch security audit results for skills from the audit API.
- * Returns null on any error or timeout — never blocks installation.
+ * 从审计 API 获取技能安全审计结果。
+ * 出错或超时时返回 null — 永不阻塞安装流程。
  */
 export async function fetchAuditData(
   source: string,
@@ -131,8 +131,7 @@ export async function fetchAuditData(
   }
 }
 
-// Pending telemetry promises — awaited before CLI exit so we don't lose data,
-// but never block the main workflow.
+// 进行中的遥测请求 — CLI 退出前 await，避免丢数据，但不阻塞主流程。
 const pendingTelemetry: Promise<void>[] = [];
 
 export function track(data: TelemetryData): void {
@@ -141,43 +140,42 @@ export function track(data: TelemetryData): void {
   try {
     const params = new URLSearchParams();
 
-    // Add version
+    // 附加版本号
     if (cliVersion) {
       params.set('v', cliVersion);
     }
 
-    // Add CI flag if running in CI
+    // 在 CI 环境中附加 CI 标记
     if (isCI()) {
       params.set('ci', '1');
     }
 
-    // Add detected AI agent name
+    // 附加检测到的 AI agent 名称
     if (detectedAgentName) {
       params.set('agent', detectedAgentName);
     }
 
-    // Add event data
+    // 附加事件数据
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined && value !== null) {
         params.set(key, String(value));
       }
     }
 
-    // Fire and forget during the workflow, but track the promise so
-    // flushTelemetry() can await it before the process exits.
+    // 工作流中 fire-and-forget，但记录 promise，
+    // 以便 flushTelemetry() 在进程退出前 await。
     const p = fetch(`${TELEMETRY_URL}?${params.toString()}`)
       .catch(() => {})
       .then(() => {});
     pendingTelemetry.push(p);
   } catch {
-    // Silently fail - telemetry should never break the CLI
+    // 静默失败 — 遥测不得影响 CLI
   }
 }
 
 /**
- * Wait for all in-flight telemetry requests to settle.
- * Called once at CLI exit so the process doesn't hang on open sockets
- * but also doesn't drop data by exiting too early.
+ * 等待所有进行中的遥测请求结束。
+ * CLI 退出时调用一次，避免在打开套接字上挂起，也避免过早退出丢数据。
  */
 export async function flushTelemetry(timeoutMs = 5000): Promise<void> {
   if (pendingTelemetry.length === 0) return;

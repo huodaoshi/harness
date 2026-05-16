@@ -1,9 +1,8 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
-import { stripTerminalEscapes } from './sanitize.ts';
+import { stripTerminalEscapes } from '../src/sanitize.ts';
 
-// const PROJECT_ROOT = join(import.meta.dirname, '..');
-const CLI_PATH = join(import.meta.dirname, 'cli.ts');
+const CLI_PATH = join(import.meta.dirname, '../src/cli.ts');
 
 export function stripAnsi(str: string): string {
   return stripTerminalEscapes(str);

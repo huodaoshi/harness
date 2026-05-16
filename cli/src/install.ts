@@ -6,13 +6,13 @@ import { runSync, parseSyncOptions } from './sync.ts';
 import { getUniversalAgents } from './agents.ts';
 
 /**
- * Install all skills from the local skills-lock.json.
- * Groups skills by source and calls `runAdd` for each group.
+ * 从本地 skills-lock.json 安装全部技能。
+ * 按 source 分组后对每组调用 `runAdd`。
  *
- * Only installs to .agents/skills/ (universal agents) -- the canonical
- * project-level location. Does not install to agent-specific directories.
+ * 仅安装到 `.agents/skills/`（通用 agent）——项目级规范位置；
+ * 不安装到各 agent 专属目录。
  *
- * node_modules skills are handled via experimental_sync.
+ * node_modules 中的技能通过 experimental_sync 处理。
  */
 export async function runInstallFromLock(args: string[]): Promise<void> {
   const cwd = process.cwd();
@@ -27,10 +27,10 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
     return;
   }
 
-  // Only install to .agents/skills/ (universal agents)
+  // 仅安装到 .agents/skills/（通用 agent）
   const universalAgentNames = getUniversalAgents();
 
-  // Separate node_modules skills from remote skills
+  // 区分 node_modules 技能与远程技能
   const nodeModuleSkills: string[] = [];
   const bySource = new Map<string, { sourceType: string; skills: string[] }>();
 
@@ -59,7 +59,7 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
     );
   }
 
-  // Install remote skills grouped by source
+  // 按 source 分组安装远程技能
   for (const [source, { skills }] of bySource) {
     try {
       await runAdd([source], {
@@ -74,7 +74,7 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
     }
   }
 
-  // Handle node_modules skills via sync
+  // 通过 sync 处理 node_modules 技能
   if (nodeModuleSkills.length > 0) {
     p.log.info(
       `${pc.cyan(String(nodeModuleSkills.length))} skill${nodeModuleSkills.length !== 1 ? 's' : ''} from node_modules`

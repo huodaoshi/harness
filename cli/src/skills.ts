@@ -8,8 +8,8 @@ import { getPluginSkillPaths, getPluginGroupings } from './plugin-manifest.ts';
 const SKIP_DIRS = ['node_modules', '.git', 'dist', 'build', '__pycache__'];
 
 /**
- * Check if internal skills should be installed.
- * Internal skills are hidden by default unless INSTALL_INTERNAL_SKILLS=1 is set.
+ * 是否应安装内部（internal）技能。
+ * 默认隐藏，除非设置 INSTALL_INTERNAL_SKILLS=1。
  */
 export function shouldInstallInternalSkills(): boolean {
   const envValue = process.env.INSTALL_INTERNAL_SKILLS;
@@ -38,14 +38,14 @@ export async function parseSkillMd(
       return null;
     }
 
-    // Ensure name and description are strings (YAML can parse numbers, booleans, etc.)
+    // 确保 name、description 为字符串（YAML 可能解析为数字、布尔等）
     if (typeof data.name !== 'string' || typeof data.description !== 'string') {
       return null;
     }
 
-    // Skip internal skills unless:
-    // 1. INSTALL_INTERNAL_SKILLS=1 is set, OR
-    // 2. includeInternal option is true (e.g., when user explicitly requests a skill)
+    // 除非满足以下之一，否则跳过 internal 技能：
+    // 1. INSTALL_INTERNAL_SKILLS=1，或
+    // 2. includeInternal 为 true（用户显式请求该技能）
     const isInternal = data.metadata?.internal === true;
     if (isInternal && !shouldInstallInternalSkills() && !options?.includeInternal) {
       return null;
@@ -74,7 +74,7 @@ async function findSkillDirs(dir: string, depth = 0, maxDepth = 5): Promise<stri
 
     const currentDir = hasSkill ? [dir] : [];
 
-    // Search subdirectories in parallel
+    // 并行搜索子目录
     const subDirResults = await Promise.all(
       entries
         .filter((entry) => entry.isDirectory() && !SKIP_DIRS.includes(entry.name))
@@ -88,16 +88,15 @@ async function findSkillDirs(dir: string, depth = 0, maxDepth = 5): Promise<stri
 }
 
 export interface DiscoverSkillsOptions {
-  /** Include internal skills (e.g., when user explicitly requests a skill by name) */
+  /** 包含 internal 技能（如用户按名称显式请求时） */
   includeInternal?: boolean;
-  /** Search all subdirectories even when a root SKILL.md exists */
+  /** 即使根目录已有 SKILL.md 也搜索全部子目录 */
   fullDepth?: boolean;
 }
 
 /**
- * Validates that a resolved subpath stays within the base directory.
- * Prevents path traversal attacks where subpath contains ".." segments
- * that would escape the cloned repository directory.
+ * 校验解析后的 subpath 仍在 base 目录内。
+ * 防止 subpath 含 ".." 逃出克隆仓库目录的路径遍历。
  */
 export function isSubpathSafe(basePath: string, subpath: string): boolean {
   const normalizedBase = normalize(resolve(basePath));
@@ -114,7 +113,7 @@ export async function discoverSkills(
   const skills: Skill[] = [];
   const seenNames = new Set<string>();
 
-  // Validate subpath doesn't escape basePath (prevent path traversal)
+  // 校验 subpath 不逃出 basePath（防路径遍历）
   if (subpath && !isSubpathSafe(basePath, subpath)) {
     throw new Error(
       `Invalid subpath: "${subpath}" resolves outside the repository directory. Subpath must not contain ".." segments that escape the base path.`
@@ -123,11 +122,11 @@ export async function discoverSkills(
 
   const searchPath = subpath ? join(basePath, subpath) : basePath;
 
-  // Get plugin groupings to map skills to their parent plugin
-  // We search for plugin definitions from the base search path
+  // 获取插件分组，将技能映射到父插件
+  // 从 base 搜索路径查找插件定义
   const pluginGroupings = await getPluginGroupings(searchPath);
 
-  // Helper to assign plugin name if available
+  // 若有插件名则写入 skill
   const enhanceSkill = (skill: Skill) => {
     const resolvedPath = resolve(skill.path);
     if (pluginGroupings.has(resolvedPath)) {
@@ -136,21 +135,21 @@ export async function discoverSkills(
     return skill;
   };
 
-  // If pointing directly at a skill, add it (and return early unless fullDepth is set)
+  // 若直接指向某技能目录，加入该技能（除非设置了 fullDepth 则继续搜）
   if (await hasSkillMd(searchPath)) {
     let skill = await parseSkillMd(join(searchPath, 'SKILL.md'), options);
     if (skill) {
       skill = enhanceSkill(skill);
       skills.push(skill);
       seenNames.add(skill.name);
-      // Only return early if fullDepth is not set
+      // 未设置 fullDepth 时提前返回
       if (!options?.fullDepth) {
         return skills;
       }
     }
   }
 
-  // Search common skill locations first
+  // 优先搜索常见技能目录
   const prioritySearchDirs = [
     searchPath,
     join(searchPath, 'skills'),
@@ -183,7 +182,7 @@ export async function discoverSkills(
     join(searchPath, '.zencoder/skills'),
   ];
 
-  // Add skill paths declared in plugin manifests
+  // 加入插件 manifest 声明的技能路径
   prioritySearchDirs.push(...(await getPluginSkillPaths(searchPath)));
 
   for (const dir of prioritySearchDirs) {
@@ -204,11 +203,11 @@ export async function discoverSkills(
         }
       }
     } catch {
-      // Directory doesn't exist
+      // 目录不存在
     }
   }
 
-  // Fall back to recursive search if nothing found, or if fullDepth is set
+  // 未找到任何技能或设置了 fullDepth 时，回退到递归搜索
   if (skills.length === 0 || options?.fullDepth) {
     const allSkillDirs = await findSkillDirs(searchPath);
 
@@ -230,8 +229,8 @@ export function getSkillDisplayName(skill: Skill): string {
 }
 
 /**
- * Filter skills based on user input (case-insensitive direct matching).
- * Multi-word skill names must be quoted on the command line.
+ * 按用户输入过滤技能（大小写不敏感、直接匹配）。
+ * 多词技能名须在命令行加引号。
  */
 export function filterSkills(skills: Skill[], inputNames: string[]): Skill[] {
   const normalizedInputs = inputNames.map((n) => n.toLowerCase());

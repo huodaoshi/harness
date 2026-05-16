@@ -5,7 +5,7 @@ import { xdgConfig } from 'xdg-basedir';
 import type { AgentConfig, AgentType } from './types.ts';
 
 const home = homedir();
-// Use xdg-basedir (not env-paths) to match OpenCode/Amp/Goose behavior on all platforms.
+// 使用 xdg-basedir（而非 env-paths），与各平台上 OpenCode/Amp/Goose 的行为一致。
 const configHome = xdgConfig ?? join(home, '.config');
 const codexHome = process.env.CODEX_HOME?.trim() || join(home, '.codex');
 const claudeHome = process.env.CLAUDE_CONFIG_DIR?.trim() || join(home, '.claude');
@@ -544,9 +544,9 @@ export function getAgentConfig(type: AgentType): AgentConfig {
 }
 
 /**
- * Returns agents that use the universal .agents/skills directory.
- * These agents share a common skill location and don't need symlinks.
- * Agents with showInUniversalList: false are excluded.
+ * 返回使用通用 `.agents/skills` 目录的 agent。
+ * 这些 agent 共享同一技能路径，无需符号链接。
+ * `showInUniversalList: false` 的 agent 会被排除。
  */
 export function getUniversalAgents(): AgentType[] {
   return (Object.entries(agents) as [AgentType, AgentConfig][])
@@ -557,8 +557,8 @@ export function getUniversalAgents(): AgentType[] {
 }
 
 /**
- * Returns agents that use agent-specific skill directories (not universal).
- * These agents need symlinks from the canonical .agents/skills location.
+ * 返回使用 agent 专属技能目录（非通用目录）的 agent。
+ * 这些 agent 需要从规范的 `.agents/skills` 位置创建符号链接。
  */
 export function getNonUniversalAgents(): AgentType[] {
   return (Object.entries(agents) as [AgentType, AgentConfig][])
@@ -566,9 +566,7 @@ export function getNonUniversalAgents(): AgentType[] {
     .map(([type]) => type);
 }
 
-/**
- * Check if an agent uses the universal .agents/skills directory.
- */
+/** 判断某 agent 是否使用通用的 `.agents/skills` 目录。 */
 export function isUniversalAgent(type: AgentType): boolean {
   return agents[type].skillsDir === '.agents/skills';
 }

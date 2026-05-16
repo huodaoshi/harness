@@ -19,8 +19,8 @@ export function formatSourceInput(sourceUrl: string, ref?: string): string {
 }
 
 /**
- * Derive the skill's folder path from a SKILL.md-terminated skillPath.
- * Returns '' when the skill lives at the repo root.
+ * 从以 SKILL.md 结尾的 skillPath 推导技能所在文件夹路径。
+ * 技能位于仓库根目录时返回 ''。
  */
 function deriveSkillFolder(skillPath: string): string {
   let folder = skillPath;
@@ -42,8 +42,8 @@ function appendFolderAndRef(source: string, skillPath: string, ref?: string): st
 }
 
 /**
- * Build the source argument for `skills add` during update.
- * Uses shorthand form for path-targeted updates to avoid branch/path ambiguity.
+ * 在 update 流程中为 `skills add` 构建 source 参数。
+ * 对路径定向的更新使用简写形式，避免分支/路径歧义。
  */
 export function buildUpdateInstallSource(entry: UpdateSourceEntry): string {
   if (!entry.skillPath) {
@@ -53,9 +53,8 @@ export function buildUpdateInstallSource(entry: UpdateSourceEntry): string {
 }
 
 /**
- * Build the source argument for `skills add` during project-level update.
- * Local lock entries don't carry `sourceUrl`, so we fall back to the bare
- * `source` identifier when no `skillPath` is available.
+ * 在项目级 update 中为 `skills add` 构建 source 参数。
+ * 本地 lock 条目不含 `sourceUrl`，无 `skillPath` 时回退为裸 `source` 标识符。
  */
 export function buildLocalUpdateSource(entry: LocalUpdateSourceEntry): string {
   if (!entry.skillPath) {

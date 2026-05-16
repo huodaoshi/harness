@@ -21,15 +21,9 @@
     "prepublishOnly": "npm run build",
     "format": "prettier --write \"src/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.ts\"",
-    "prepare": "husky",
     "test": "vitest",
     "type-check": "tsc --noEmit",
     "publish:snapshot": "npm version prerelease --preid=snapshot --no-git-tag-version && npm publish --tag snapshot"
-  },
-  "lint-staged": {
-    "src/**/*.ts": "prettier --write",
-    "scripts/**/*.ts": "prettier --write",
-    "tests/**/*.ts": "prettier --write"
   },
   "keywords": [
     "cli",
@@ -107,8 +101,6 @@
     "@types/bun": "latest",
     "@types/node": "^22.10.0",
     "@vercel/detect-agent": "^1.2.1",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
     "obuild": "^0.4.22",
     "picocolors": "^1.1.1",
     "prettier": "^3.8.1",
@@ -118,7 +110,7 @@
     "xdg-basedir": "^5.1.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18.0"
   },
   "packageManager": "pnpm@10.17.1",
   "dependencies": {
