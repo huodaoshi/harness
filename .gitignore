@@ -1,0 +1,19 @@
+# CLI (vendored vercel-labs/skills)
+cli/node_modules/
+cli/dist/
+cli/coverage/
+cli/out/
+cli/*.tgz
+cli/*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+
+# Env
+.env
+.env.*
+
+# Local scratch work (issue tracker output; uncomment if you don't want to commit)
+# .scratch/
