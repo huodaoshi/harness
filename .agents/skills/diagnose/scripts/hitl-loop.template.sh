@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# Human-in-the-loop reproduction loop.
-# Copy this file, edit the steps below, and run it.
-# The agent runs the script; the user follows prompts in their terminal.
+# 人在环中的复现循环。
+# 复制本文件，编辑下方步骤后运行。
+# Agent 运行脚本；用户在终端按提示操作。
 #
-# Usage:
+# 用法：
 #   bash hitl-loop.template.sh
 #
-# Two helpers:
-#   step "<instruction>"          → show instruction, wait for Enter
-#   capture VAR "<question>"      → show question, read response into VAR
+# 两个辅助函数：
+#   step "<说明>"          → 显示说明，等待 Enter
+#   capture VAR "<问题>"   → 显示问题，读入回答到 VAR
 #
-# At the end, captured values are printed as KEY=VALUE for the agent to parse.
+# 结束时以 KEY=VALUE 打印捕获值，供 Agent 解析。
 
 set -euo pipefail
 
 step() {
   printf '\n>>> %s\n' "$1"
-  read -r -p "    [Enter when done] " _
+  read -r -p "    [完成后按 Enter] " _
 }
 
 capture() {
@@ -26,16 +26,16 @@ capture() {
   printf -v "$var" '%s' "$answer"
 }
 
-# --- edit below ---------------------------------------------------------
+# --- 在下方编辑 ---------------------------------------------------------
 
-step "Open the app at http://localhost:3000 and sign in."
+step "在浏览器打开 http://localhost:3000 并登录。"
 
-capture ERRORED "Click the 'Export' button. Did it throw an error? (y/n)"
+capture ERRORED "点击「Export」按钮。是否抛出错误？(y/n)"
 
-capture ERROR_MSG "Paste the error message (or 'none'):"
+capture ERROR_MSG "粘贴错误信息（或填 'none'）："
 
-# --- edit above ---------------------------------------------------------
+# --- 在上方编辑 ---------------------------------------------------------
 
-printf '\n--- Captured ---\n'
+printf '\n--- 已捕获 ---\n'
 printf 'ERRORED=%s\n' "$ERRORED"
 printf 'ERROR_MSG=%s\n' "$ERROR_MSG"

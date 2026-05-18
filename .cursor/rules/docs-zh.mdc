@@ -14,9 +14,14 @@ alwaysApply: true
 - `CONTEXT.md`、`CONTEXT-MAP.md`（仓库根或子目录）
 - `.scratch/**`（PRD、issue、评论、分拣备注）
 
-## 排除路径（保持英文）
+## 技能文件（`SKILL.md`）
 
-- `.claude/skills/**`、`.agents/skills/**` 中的 `SKILL.md` 及上游技能附属文件
+- **本仓维护**（`.agents/skills/` 中由团队编写或本地改写的技能）：使用简体中文
+- **上游 / vendor**（自外部同步、第三方包或可预期会再同步的技能；含 `.claude/skills/**`）：保持英文，避免同步冲突
+- 用户明确要求某一语言时，以用户要求为准
+
+## 排除路径
+
 - `skills-lock.json` 等工具/锁文件（除非用户明确要求翻译）
 
 ## 约定保留英文的部分

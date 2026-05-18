@@ -6,7 +6,7 @@
 - `.scratch/` 下的 PRD、issue 与评论
 - Agent 新建或大幅改写的 markdown 文档
 
-`.claude/`、`.agents/` 下的 `SKILL.md` 等上游技能文件保持英文，不要翻译。
+**技能文件（`SKILL.md`）**：`.agents/skills/` 中由本仓库维护的技能，正文使用简体中文。自上游同步或 vendor 引入、以及 `.claude/skills/` 中的技能保持英文，避免与上游 diff 冲突。用户明确要求某一语言时，以其为准。
 
 与用户对话时使用简体中文。
 

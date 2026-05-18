@@ -1,77 +1,77 @@
-# CONTEXT.md Format
+# CONTEXT.md 格式
 
-## Structure
+## 结构
 
 ```md
-# {Context Name}
+# {上下文名称}
 
-{One or two sentence description of what this context is and why it exists.}
+{一两句话说明该上下文是什么、为何存在。}
 
 ## Language
 
 **Order**:
-{A concise description of the term}
+{对该术语的简明定义}
 _Avoid_: Purchase, transaction
 
 **Invoice**:
-A request for payment sent to a customer after delivery.
+向客户在交付后发出的付款请求。
 _Avoid_: Bill, payment request
 
 **Customer**:
-A person or organization that places orders.
+下单的个人或组织。
 _Avoid_: Client, buyer, account
 
 ## Relationships
 
-- An **Order** produces one or more **Invoices**
-- An **Invoice** belongs to exactly one **Customer**
+- 一笔 **Order** 可产生一条或多条 **Invoice**
+- 每条 **Invoice** 恰好属于一个 **Customer**
 
 ## Example dialogue
 
-> **Dev:** "When a **Customer** places an **Order**, do we create the **Invoice** immediately?"
-> **Domain expert:** "No — an **Invoice** is only generated once a **Fulfillment** is confirmed."
+> **Dev:** 「**Customer** 下 **Order** 时，是否立即创建 **Invoice**？」
+> **Domain expert:** 「否——仅在 **Fulfillment** 确认后才生成 **Invoice**。」
 
 ## Flagged ambiguities
 
-- "account" was used to mean both **Customer** and **User** — resolved: these are distinct concepts.
+- 「account」曾混指 **Customer** 与 **User**——已厘清：二者为不同概念。
 ```
 
-## Rules
+## 规则
 
-- **Be opinionated.** When multiple words exist for the same concept, pick the best one and list the others as aliases to avoid.
-- **Flag conflicts explicitly.** If a term is used ambiguously, call it out in "Flagged ambiguities" with a clear resolution.
-- **Keep definitions tight.** One sentence max. Define what it IS, not what it does.
-- **Show relationships.** Use bold term names and express cardinality where obvious.
-- **Only include terms specific to this project's context.** General programming concepts (timeouts, error types, utility patterns) don't belong even if the project uses them extensively. Before adding a term, ask: is this a concept unique to this context, or a general programming concept? Only the former belongs.
-- **Group terms under subheadings** when natural clusters emerge. If all terms belong to a single cohesive area, a flat list is fine.
-- **Write an example dialogue.** A conversation between a dev and a domain expert that demonstrates how the terms interact naturally and clarifies boundaries between related concepts.
+- **要有立场。** 同一概念存在多个词时，选定最佳用词，其余列入应避免的同义词。
+- **显式标注冲突。** 术语用法含糊时，在「Flagged ambiguities」中写明及最终决议。
+- **定义要短。** 每条最多一句；定义它**是什么**，而非它**做什么**。
+- **写清关系。** 术语名加粗，在显而易见处标明基数。
+- **只收录本项目上下文特有的概念。** 通用编程概念（超时、错误类型、工具模式等）即便项目大量使用也不应写入。新增术语前自问：这是本上下文独有概念，还是通用编程概念？仅前者收录。
+- **自然聚类时用子标题分组。** 若所有术语同属一块领域，平铺列表亦可。
+- **写一段示例对话。** 开发与设计/领域专家之间的对话，自然展示术语如何配合，并厘清相近概念的边界。
 
-## Single vs multi-context repos
+## 单上下文与多上下文仓库
 
-**Single context (most repos):** One `CONTEXT.md` at the repo root.
+**单上下文（多数仓库）：** 仓库根目录一个 `CONTEXT.md`。
 
-**Multiple contexts:** A `CONTEXT-MAP.md` at the repo root lists the contexts, where they live, and how they relate to each other:
+**多上下文：** 根目录 `CONTEXT-MAP.md` 列出各上下文、路径及彼此关系：
 
 ```md
 # Context Map
 
 ## Contexts
 
-- [Ordering](./src/ordering/CONTEXT.md) — receives and tracks customer orders
-- [Billing](./src/billing/CONTEXT.md) — generates invoices and processes payments
-- [Fulfillment](./src/fulfillment/CONTEXT.md) — manages warehouse picking and shipping
+- [Ordering](./src/ordering/CONTEXT.md) — 接收并跟踪客户订单
+- [Billing](./src/billing/CONTEXT.md) — 生成发票并处理付款
+- [Fulfillment](./src/fulfillment/CONTEXT.md) — 管理仓内拣货与发货
 
 ## Relationships
 
-- **Ordering → Fulfillment**: Ordering emits `OrderPlaced` events; Fulfillment consumes them to start picking
-- **Fulfillment → Billing**: Fulfillment emits `ShipmentDispatched` events; Billing consumes them to generate invoices
-- **Ordering ↔ Billing**: Shared types for `CustomerId` and `Money`
+- **Ordering → Fulfillment**：Ordering 发出 `OrderPlaced` 事件；Fulfillment 消费以开始拣货
+- **Fulfillment → Billing**：Fulfillment 发出 `ShipmentDispatched` 事件；Billing 消费以生成发票
+- **Ordering ↔ Billing**：共享 `CustomerId`、`Money` 等类型
 ```
 
-The skill infers which structure applies:
+技能按以下方式判断结构：
 
-- If `CONTEXT-MAP.md` exists, read it to find contexts
-- If only a root `CONTEXT.md` exists, single context
-- If neither exists, create a root `CONTEXT.md` lazily when the first term is resolved
+- 存在 `CONTEXT-MAP.md` → 读取以定位各上下文
+- 仅根目录有 `CONTEXT.md` → 单上下文
+- 二者皆无 → 首个术语敲定后懒创建根目录 `CONTEXT.md`
 
-When multiple contexts exist, infer which one the current topic relates to. If unclear, ask.
+多上下文时，推断当前话题属于哪一块；不明确则询问用户。

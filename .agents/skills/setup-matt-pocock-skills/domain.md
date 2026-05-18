@@ -1,18 +1,18 @@
-# Domain Docs
+# 领域文档
 
-How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+工程类技能在探索代码库时，应如何消费本仓库的领域文档。
 
-## Before exploring, read these
+## 探索前先读
 
-- **`CONTEXT.md`** at the repo root, or
-- **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- 仓库根目录的 **`CONTEXT.md`**，或
+- 若存在根目录 **`CONTEXT-MAP.md`** — 它指向各上下文的 `CONTEXT.md`。阅读与当前话题相关的那些。
+- **`docs/adr/`** — 阅读与即将改动区域相关的 ADR。多上下文仓库中，另查 `src/<context>/docs/adr/` 中的上下文内决策。
 
-If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
+若上述文件不存在，**静默继续**。勿强调缺失；勿主动建议预先创建。产出方技能（`/grill-with-docs`）在术语或决策实际敲定后懒创建。
 
-## File structure
+## 文件结构
 
-Single-context repo (most repos):
+单上下文仓库（多数）：
 
 ```
 /
@@ -23,29 +23,29 @@ Single-context repo (most repos):
 └── src/
 ```
 
-Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
+多上下文仓库（根目录存在 `CONTEXT-MAP.md`）：
 
 ```
 /
 ├── CONTEXT-MAP.md
-├── docs/adr/                          ← system-wide decisions
+├── docs/adr/                          ← 全系统级决策
 └── src/
     ├── ordering/
     │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
+    │   └── docs/adr/                  ← 上下文内决策
     └── billing/
         ├── CONTEXT.md
         └── docs/adr/
 ```
 
-## Use the glossary's vocabulary
+## 使用术语表的用语
 
-When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+输出中命名领域概念时（issue 标题、重构建议、假设、测试名），使用 `CONTEXT.md` 中的定义。勿改用术语表明确避免的同义词。
 
-If the concept you need isn't in the glossary yet, that's a signal — either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/grill-with-docs`).
+若所需概念不在术语表中，这是信号——要么你在发明项目未用的语言（应重新考虑），要么确有缺口（记下供 `/grill-with-docs` 处理）。
 
-## Flag ADR conflicts
+## 标注 ADR 冲突
 
-If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
+若输出与既有 ADR 矛盾，应显式指出，勿静默覆盖：
 
-> _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_
+> _与 ADR-0007（event-sourced orders）矛盾——但值得重新讨论，因为…_
