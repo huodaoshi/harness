@@ -16,11 +16,18 @@
 
 ## 验收标准
 
-- [ ] `POST /v1/sessions/stream` 返回 `Content-Type: text/event-stream`
-- [ ] 连续收到 `event: token` 与最终 `event: done`（含 `session_id`）
-- [ ] 使用假 ChatModel，无外部 API 依赖即可在 dev 启动
-- [ ] 集成测试或脚本可自动化断言 SSE 序列（不依赖浏览器）
-- [ ] Eino / Hertz 版本在 `go.mod` 中 pin；符合 `.cursor/rules/eino.md`
+- [x] `POST /v1/sessions/stream` 返回 `Content-Type: text/event-stream`
+- [x] 连续收到 `event: token` 与最终 `event: done`（含 `session_id`）
+- [x] 使用假 ChatModel，无外部 API 依赖即可在 dev 启动
+- [x] 集成测试或脚本可自动化断言 SSE 序列（`backend/internal/httpserver` E2E）
+- [x] Eino v0.8.13 / Hertz v0.10.4 在 `go.mod` 中 pin；符合 `.cursor/rules/eino.md`
+
+## 评论
+
+### 2026-05-19 · 实现完成
+
+- 代码：`backend/`（`go test ./...` 通过）
+- 运行：`go run ./cmd/server` → `curl` 见 `backend/README.md`
 
 ## 阻塞于
 
