@@ -2,9 +2,21 @@
 
 Analyst 负责**替用户填补信息缺口**，避免把「我不知道市场/技术」变成选择题轰炸用户。
 
+## references/（来自 landscape）
+
+若存在 `.scratch/<feature>/references/`：
+
+- 议会开始前**先读** `README.md`、`user-notes.md` 及索引中的各 md
+- Analyst 引用时标明文件路径；**勿**对已有条目重复全网扫描
+- Skeptic·市场 应攻击 references 中的**低置信度**或**待核实**项
+
+若无 references/，见 SKILL 入场：建议先 `landscape`，或 Analyst 补搜（不代替完整 landscape）。
+
 ## 何时启动调研
 
 每轮议会**开始前**，若存在以下任一情况，先跑 Analyst（可并行 Web 搜索、读仓库文档）：
+
+**若议题已在 references/ 中覆盖，跳过重复竞品搜索，仅补缺口。**
 
 - 用户明确表示：不知道、不清楚、没想好、你看着办、帮我调研
 - 议题涉及：市场、竞品、定价、监管、主流技术栈、托管成本、团队技能匹配
