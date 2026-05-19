@@ -3,24 +3,27 @@ package session
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
 	"github.com/huodaoshi/harness/backend/internal/safety"
+	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
 const (
-	nodeSafety   = "safety_gate"
-	nodeCrisis   = "crisis_branch"
-	nodeFakeChat = "fake_chat"
+	nodeSafety        = "safety_gate"
+	nodeCrisis        = "crisis_branch"
+	nodeProfileInject = "profile_inject"
+	nodeFakeChat      = "fake_chat"
 )
 
-// newSessionGraph: START → safety_gate → branch → crisis_branch | fake_chat → END
-// Crisis branch has no edge to fake_chat (ChatModel).
+// newSessionGraph: START → safety_gate → branch → crisis | profile_inject → fake_chat → END
 func newSessionGraph(
 	ctx context.Context,
 	eval *safety.Evaluator,
 	templates *safety.TemplateStore,
+	st store.Store,
 	calls *FakeChatCallCounter,
 ) (compose.Runnable[Input, TurnOutput], error) {
 	g := compose.NewGraph[Input, TurnOutput]()
@@ -44,9 +47,25 @@ func newSessionGraph(
 		return nil, fmt.Errorf("add crisis_branch: %w", err)
 	}
 
-	chatNode := compose.InvokableLambda(func(ctx context.Context, routed RoutedInput) (TurnOutput, error) {
+	profileNode := compose.InvokableLambda(func(ctx context.Context, routed RoutedInput) (EnrichedChatInput, error) {
+		block, err := loadInjectBlock(ctx, st, routed.Input.UserID)
+		if err != nil {
+			return EnrichedChatInput{}, err
+		}
+		return EnrichedChatInput{Routed: routed, InjectBlock: block}, nil
+	})
+	if err := g.AddLambdaNode(nodeProfileInject, profileNode); err != nil {
+		return nil, fmt.Errorf("add profile_inject: %w", err)
+	}
+
+	chatNode := compose.InvokableLambda(func(ctx context.Context, enriched EnrichedChatInput) (TurnOutput, error) {
 		calls.Inc()
-		return TurnOutput{Chat: fakeReply(routed.Input), ChatUsed: true}, nil
+		chat := fakeReplyWithInject(enriched.Routed.Input, enriched.InjectBlock)
+		return TurnOutput{
+			Chat:        chat,
+			ChatUsed:    true,
+			InjectBlock: enriched.InjectBlock,
+		}, nil
 	})
 	if err := g.AddLambdaNode(nodeFakeChat, chatNode); err != nil {
 		return nil, fmt.Errorf("add fake_chat: %w", err)
@@ -56,26 +75,52 @@ func newSessionGraph(
 		if routed.Gate.IsCrisis() {
 			return nodeCrisis, nil
 		}
-		return nodeFakeChat, nil
-	}, map[string]bool{nodeCrisis: true, nodeFakeChat: true})
+		return nodeProfileInject, nil
+	}, map[string]bool{nodeCrisis: true, nodeProfileInject: true})
 	if err := g.AddBranch(nodeSafety, branch); err != nil {
 		return nil, fmt.Errorf("add branch: %w", err)
 	}
 
 	if err := g.AddEdge(compose.START, nodeSafety); err != nil {
-		return nil, fmt.Errorf("start→safety: %w", err)
+		return nil, err
 	}
 	if err := g.AddEdge(nodeCrisis, compose.END); err != nil {
-		return nil, fmt.Errorf("crisis→end: %w", err)
+		return nil, err
+	}
+	if err := g.AddEdge(nodeProfileInject, nodeFakeChat); err != nil {
+		return nil, err
 	}
 	if err := g.AddEdge(nodeFakeChat, compose.END); err != nil {
-		return nil, fmt.Errorf("chat→end: %w", err)
+		return nil, err
 	}
 
-	return g.Compile(ctx, compose.WithGraphName("relationship_session_s2"))
+	return g.Compile(ctx, compose.WithGraphName("relationship_session_s3"))
 }
 
-// newChatOnlyGraph is the Spike S1 streaming graph (pass path only).
+func loadInjectBlock(ctx context.Context, st store.Store, userID string) (string, error) {
+	if userID == "" {
+		return "", nil
+	}
+	profile, err := st.GetProfile(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	summary, err := st.GetLatestSummary(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	return store.BuildInjectBlock(profile, summary), nil
+}
+
+func fakeReplyWithInject(in Input, injectBlock string) string {
+	base := fakeReply(in)
+	if strings.TrimSpace(injectBlock) == "" {
+		return base
+	}
+	return "【已读上下文】\n" + injectBlock + "\n---\n" + base
+}
+
+// newChatOnlyGraph is the Spike S1 streaming graph (pass path only, no profile inject).
 func newChatOnlyGraph(ctx context.Context, calls *FakeChatCallCounter) (compose.Runnable[Input, string], error) {
 	g := compose.NewGraph[Input, string]()
 
@@ -106,7 +151,6 @@ func newChatOnlyGraph(ctx context.Context, calls *FakeChatCallCounter) (compose.
 	return g.Compile(ctx, compose.WithGraphName("relationship_session_s1_stream"))
 }
 
-// NewStreamGraph builds the Spike S1 streaming runnable (chat-only).
 func NewStreamGraph(ctx context.Context) (compose.Runnable[Input, string], error) {
 	calls := &FakeChatCallCounter{}
 	return newChatOnlyGraph(ctx, calls)

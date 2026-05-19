@@ -60,7 +60,12 @@ func NewStreamHandler(exec *session.Executor) app.HandlerFunc {
 		c.SetStatusCode(http.StatusOK)
 		w := sse.NewWriter(c)
 
-		in := session.Input{Message: req.Message, Mode: req.Mode}
+		userID := req.UserID
+		if userID == "" {
+			userID = "anonymous"
+		}
+
+		in := session.Input{UserID: userID, Message: req.Message, Mode: req.Mode}
 		exec.ChatCalls.Reset()
 		outcome, err := exec.RunTurn(ctx, in)
 		if err != nil {

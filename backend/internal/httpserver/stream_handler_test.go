@@ -16,6 +16,7 @@ import (
 
 	"github.com/huodaoshi/harness/backend/internal/httpserver"
 	"github.com/huodaoshi/harness/backend/internal/session"
+	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
 func TestStreamHandler_SSETokenAndDone(t *testing.T) {
@@ -83,7 +84,7 @@ func TestStreamHandler_CrisisScriptsTable(t *testing.T) {
 func newTestExecutor(t *testing.T) *session.Executor {
 	t.Helper()
 	ctx := context.Background()
-	exec, err := session.NewExecutor(ctx)
+	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
 	if err != nil {
 		t.Fatalf("executor: %v", err)
 	}

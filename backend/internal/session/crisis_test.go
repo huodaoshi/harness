@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/huodaoshi/harness/backend/internal/session"
+	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
 // Ten crisis scripts (Spike S2 acceptance).
@@ -27,7 +28,7 @@ var crisisScripts = []struct {
 
 func TestCrisisScripts_ZeroChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutor(ctx)
+	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
 	if err != nil {
 		t.Fatalf("executor: %v", err)
 	}
@@ -60,7 +61,7 @@ func TestCrisisScripts_ZeroChatCalls(t *testing.T) {
 
 func TestPassPath_IncrementsChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutor(ctx)
+	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
 	if err != nil {
 		t.Fatal(err)
 	}

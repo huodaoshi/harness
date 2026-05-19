@@ -16,11 +16,18 @@
 
 ## 验收标准
 
-- [ ] Mongo 集合与 PRD snake_case 字段一致
-- [ ] 无档案时 inject 为空或默认占位，不 500
-- [ ] 有档案 + 摘要时，假模型侧可见两者内容
-- [ ] 20 条自动化全部通过
-- [ ] dev 文档说明如何启动本地 Mongo
+- [x] Mongo 集合与 PRD snake_case 字段一致（`store` 模型 + `MongoStore`）
+- [x] 无档案时 inject 为空，不 500
+- [x] 有档案 + 摘要时，假 chat 回复含 inject 关键字段
+- [x] 20 条自动化（`profile_inject_test.go`）+ distress 补充用例
+- [x] `docker-compose.yml` + README
+
+## 评论
+
+### 2026-05-19 · 实现完成
+
+- Graph：`profile_inject` → `fake_chat`（危机路径不经过 inject）
+- `USE_MEMORY_STORE=true` 用于无 Mongo 测试；默认连 `MONGODB_URI`
 
 ## 阻塞于
 

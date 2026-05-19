@@ -6,18 +6,29 @@ import (
 
 	"github.com/cloudwego/eino/compose"
 	"github.com/huodaoshi/harness/backend/internal/safety"
+	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
-// Executor runs the relationship session graph with SafetyGate.
+// Executor runs the relationship session graph with SafetyGate and ProfileInject.
 type Executor struct {
-	Runnable   compose.Runnable[Input, TurnOutput]
-	ChatCalls  *FakeChatCallCounter
-	Evaluator  *safety.Evaluator
-	Templates  *safety.TemplateStore
+	Runnable  compose.Runnable[Input, TurnOutput]
+	ChatCalls *FakeChatCallCounter
+	Evaluator *safety.Evaluator
+	Templates *safety.TemplateStore
+	Store     store.Store
 }
 
-// NewExecutor builds SafetyGate + branched graph (crisis | fake chat).
+// NewExecutor builds the full S3 graph with store from environment.
 func NewExecutor(ctx context.Context) (*Executor, error) {
+	st, err := store.NewFromEnv(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("store: %w", err)
+	}
+	return NewExecutorWithStore(ctx, st)
+}
+
+// NewExecutorWithStore is for tests and explicit wiring.
+func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error) {
 	eval, err := safety.NewEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("evaluator: %w", err)
@@ -27,7 +38,7 @@ func NewExecutor(ctx context.Context) (*Executor, error) {
 		return nil, fmt.Errorf("templates: %w", err)
 	}
 	calls := &FakeChatCallCounter{}
-	runnable, err := newSessionGraph(ctx, eval, templates, calls)
+	runnable, err := newSessionGraph(ctx, eval, templates, st, calls)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +47,7 @@ func NewExecutor(ctx context.Context) (*Executor, error) {
 		ChatCalls: calls,
 		Evaluator: eval,
 		Templates: templates,
+		Store:     st,
 	}, nil
 }
 
@@ -48,14 +60,14 @@ func (e *Executor) RunTurn(ctx context.Context, in Input) (TurnOutcome, error) {
 	if out.Crisis != nil {
 		return TurnOutcome{Crisis: out.Crisis, ChatCalls: 0}, nil
 	}
-	return TurnOutcome{Chat: out.Chat, ChatCalls: e.ChatCalls.Load()}, nil
+	return TurnOutcome{
+		Chat:        out.Chat,
+		ChatCalls:   e.ChatCalls.Load(),
+		InjectBlock: out.InjectBlock,
+	}, nil
 }
 
-// CompileDefaultGraph keeps Spike S1 name for tests that only need streaming chat path.
 func CompileDefaultGraph(ctx context.Context) (compose.Runnable[Input, string], error) {
-	ex, err := NewExecutor(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return newChatOnlyGraph(ctx, ex.ChatCalls)
+	calls := &FakeChatCallCounter{}
+	return newChatOnlyGraph(ctx, calls)
 }
