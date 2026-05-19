@@ -1,0 +1,13 @@
+# Cursor Rules（harness）
+
+| 文件 | 作用域 | 说明 |
+| ---- | ------ | ---- |
+| `docs-zh.mdc` | 全局 `alwaysApply` | 文档与 Agent 产出用简体中文 |
+| `windows-shell.mdc` | 全局 `alwaysApply` | PowerShell 勿用 `&&` |
+| `git.md` | `cli/**`, `backend/**` | 分支、`master`、GitHub PR |
+| `naming.md` | `cli/**`, `backend/**`, `**/*.go` | snake_case / camelCase 分层 |
+| `eino.md` | `backend/**/*.go` | Eino 编排；无 `backend/` 时不生效 |
+| `_lang/typescript.md` | `**/*.ts(x)` | CLI 等 TS 代码 |
+| `_lang/go.md` 等 | 各语言 glob | 有对应源码时生效 |
+
+**未跟踪时：** 新 rule 需 `git add .cursor/rules/` 后才会进版本库。
