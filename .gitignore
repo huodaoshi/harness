@@ -17,3 +17,8 @@ Thumbs.db
 
 # Local scratch work (issue tracker output; uncomment if you don't want to commit)
 # .scratch/
+
+# .scratch/ 根目录下的本地测试残留（PRD、issues、references 仍正常提交）
+.scratch/req.json
+.scratch/req-*.json
+.scratch/server.pid
