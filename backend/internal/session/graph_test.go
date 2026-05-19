@@ -26,12 +26,7 @@ func TestStreamGraph_EmitsTokens(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stream: %v", err)
 	}
-
-	out := got.String()
-	if out == "" {
-		t.Fatal("expected non-empty streamed reply")
-	}
-	if !strings.Contains(out, "听到") {
-		t.Fatalf("expected distress reply, got %q", out)
+	if !strings.Contains(got.String(), "听到") {
+		t.Fatalf("unexpected reply: %q", got.String())
 	}
 }

@@ -16,11 +16,18 @@
 
 ## 验收标准
 
-- [ ] 10/10 危机剧本触发 `crisis` 事件，无 `token` 流
-- [ ] 测试中断言 LLM/ChatModel mock 调用次数为 0
-- [ ] Graph 危机边在代码审查上可见「未挂载 ChatModel 节点」
-- [ ] 危机路径 operational 日志不落用户原文（仅 gate 结果或 hash）
-- [ ] 与 #01 共用同一 SSE 端点，不新建平行 API
+- [x] 10/10 危机剧本触发 `crisis` 事件，无 `token` 流
+- [x] 测试中断言 LLM/ChatModel mock 调用次数为 0（`FakeChatCallCounter`）
+- [x] Graph：`safety_gate` → branch → `crisis_branch` | `fake_chat`（无 crisis→chat 边）
+- [x] 危机路径 `safety.Audit` 不落用户原文
+- [x] 与 #01 共用 `POST /v1/sessions/stream`
+
+## 评论
+
+### 2026-05-19 · 实现完成
+
+- `backend/internal/safety`、`session.Executor`、危机 SSE
+- 测试：`crisis_test.go` + `httpserver` 10 条剧本 E2E
 
 ## 阻塞于
 

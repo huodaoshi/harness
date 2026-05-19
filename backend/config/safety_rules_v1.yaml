@@ -1,0 +1,23 @@
+# L1 SafetyGate rules (MVP). Hotline numbers in crisis_templates — verify before production.
+rules:
+  - id: crisis_self_harm
+    patterns:
+      - "不想活"
+      - "不想活了"
+      - "自杀"
+      - "轻生"
+      - "结束生命"
+      - "割腕"
+      - "跳楼"
+      - "自残"
+      - "了结自己"
+
+  - id: crisis_violence
+    patterns:
+      - "打我"
+      - "家暴"
+      - "动手打"
+      - "要杀我"
+      - "威胁我"
+      - "人身安全"
+      - "打不过"

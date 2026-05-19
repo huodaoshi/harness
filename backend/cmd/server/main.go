@@ -13,9 +13,9 @@ import (
 
 func main() {
 	ctx := context.Background()
-	runnable, err := session.CompileDefaultGraph(ctx)
+	exec, err := session.NewExecutor(ctx)
 	if err != nil {
-		log.Fatalf("compile graph: %v", err)
+		log.Fatalf("session executor: %v", err)
 	}
 
 	addr := os.Getenv("HTTP_ADDR")
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	h := server.Default(server.WithHostPorts(addr))
-	h.POST("/v1/sessions/stream", httpserver.NewStreamHandler(runnable))
+	h.POST("/v1/sessions/stream", httpserver.NewStreamHandler(exec))
 
 	log.Printf("listening on %s", addr)
 	h.Spin()

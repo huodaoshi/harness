@@ -11,7 +11,17 @@ import (
 // TokenHandler receives streamed assistant text chunks.
 type TokenHandler func(text string) error
 
-// StreamTurn runs the compiled graph and invokes handler for each token chunk.
+// StreamChatTokens streams a pass-path chat reply as rune-sized tokens.
+func StreamChatTokens(chat string, onToken TokenHandler) error {
+	for _, r := range chat {
+		if err := onToken(string(r)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// StreamTurn runs a streaming chat runnable (Spike S1 path).
 func StreamTurn(
 	ctx context.Context,
 	runnable compose.Runnable[Input, string],
@@ -39,9 +49,4 @@ func StreamTurn(
 			return err
 		}
 	}
-}
-
-// CompileDefaultGraph compiles the Spike S1 graph for production wiring.
-func CompileDefaultGraph(ctx context.Context) (compose.Runnable[Input, string], error) {
-	return NewStreamGraph(ctx)
 }
