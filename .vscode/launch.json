@@ -18,6 +18,29 @@
       }
     },
     {
+      "name": "Frontend: 开发服务器",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "yarn dev",
+      "cwd": "${workspaceFolder}/frontend",
+      "envFile": "${workspaceFolder}/frontend/.env.local",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "NextChat: 开发服务器（参考）",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "yarn dev",
+      "cwd": "${workspaceFolder}/NextChat",
+      "envFile": "${workspaceFolder}/NextChat/.env.local",
+      "env": {
+        "NODE_ENV": "development",
+        "HUSKY": "0"
+      }
+    },
+    {
       "name": "Backend: Attach (dlv :2345)",
       "type": "go",
       "request": "attach",

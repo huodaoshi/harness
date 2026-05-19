@@ -14,6 +14,8 @@ Thumbs.db
 # Env
 .env
 .env.*
+!.env.example
+!**/.env.example
 
 # Local scratch work (issue tracker output; uncomment if you don't want to commit)
 # .scratch/
@@ -23,6 +25,10 @@ Thumbs.db
 .scratch/req-*.json
 .scratch/server.pid
 .scratch/server-test.pid
+
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
 
 # Go / VS Code debug binaries
 **/__debug_bin.exe
