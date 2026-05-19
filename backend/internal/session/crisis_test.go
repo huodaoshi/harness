@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/huodaoshi/harness/backend/internal/session"
-	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
 // Ten crisis scripts (Spike S2 acceptance).
@@ -28,10 +27,7 @@ var crisisScripts = []struct {
 
 func TestCrisisScripts_ZeroChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
-	if err != nil {
-		t.Fatalf("executor: %v", err)
-	}
+	exec := newTestMemoryExecutor(t)
 
 	for _, tc := range crisisScripts {
 		t.Run(tc.name, func(t *testing.T) {
@@ -61,10 +57,7 @@ func TestCrisisScripts_ZeroChatCalls(t *testing.T) {
 
 func TestPassPath_IncrementsChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
-	if err != nil {
-		t.Fatal(err)
-	}
+	exec := newTestMemoryExecutor(t)
 	exec.ChatCalls.Reset()
 	out, err := exec.RunTurn(ctx, session.Input{
 		Message: "今天心情很糟但还能聊",

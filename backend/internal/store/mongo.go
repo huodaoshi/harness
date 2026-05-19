@@ -14,6 +14,7 @@ import (
 const (
 	collProfiles  = "relationship_profiles"
 	collSummaries = "session_summaries"
+	collSessions  = "sessions"
 )
 
 // MongoStore persists profiles and summaries.

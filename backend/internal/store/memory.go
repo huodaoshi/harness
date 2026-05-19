@@ -12,12 +12,14 @@ type MemoryStore struct {
 	mu        sync.RWMutex
 	profiles  map[string]RelationshipProfile
 	summaries map[string][]SessionSummary // user_id -> summaries
+	sessions  map[string]StoredSession
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		profiles:  make(map[string]RelationshipProfile),
 		summaries: make(map[string][]SessionSummary),
+		sessions:  make(map[string]StoredSession),
 	}
 }
 

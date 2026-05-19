@@ -265,6 +265,7 @@ body {
 
 .composer {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: flex-end;
   padding-top: 0.5rem;
@@ -389,4 +390,41 @@ body {
 .profile-status--ok {
   background: var(--user-bubble);
   color: var(--text);
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  flex-shrink: 0;
+}
+
+.summary-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.summary-card__head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.summary-card ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.summary-card li + li {
+  margin-top: 0.35rem;
+}
+
+.composer .btn--send {
+  flex: 1;
+  min-width: 4rem;
 }

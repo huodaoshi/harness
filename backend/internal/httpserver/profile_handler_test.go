@@ -14,6 +14,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 
+	"github.com/huodaoshi/harness/backend/internal/chatmodel"
 	"github.com/huodaoshi/harness/backend/internal/httpserver"
 	"github.com/huodaoshi/harness/backend/internal/session"
 	"github.com/huodaoshi/harness/backend/internal/store"
@@ -47,7 +48,7 @@ func TestProfile_GET_EmptyThenPUT_ReadBack(t *testing.T) {
 func TestProfile_PUT_ThenStream_InjectsCurrentIssue(t *testing.T) {
 	st := store.NewMemoryStore()
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, st)
+	exec, err := session.NewExecutorWithGateway(ctx, st, chatmodel.NewFakeGateway(), chatmodel.Config{Provider: "fake"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,6 +118,8 @@ func listenProfileRoutes(t *testing.T, st store.Store, exec *session.Executor) s
 	h := server.New(server.WithListener(ln))
 	h.GET("/v1/profile", httpserver.NewGetProfileHandler(st))
 	h.PUT("/v1/profile", httpserver.NewPutProfileHandler(st))
+	h.GET("/v1/sessions/:id", httpserver.NewGetSessionHandler(st))
+	h.POST("/v1/sessions/end", httpserver.NewEndSessionHandler(st))
 	if exec != nil {
 		h.POST("/v1/sessions/stream", httpserver.NewStreamHandler(exec))
 	}

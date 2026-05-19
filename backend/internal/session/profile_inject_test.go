@@ -22,10 +22,7 @@ func TestProfileInject_TwentyCases(t *testing.T) {
 			mem := store.NewMemoryStore()
 			seedStore(t, ctx, mem, tc)
 
-			exec, err := session.NewExecutorWithStore(ctx, mem)
-			if err != nil {
-				t.Fatal(err)
-			}
+			exec := newTestExecutor(t, mem)
 
 			out, err := exec.RunTurn(ctx, session.Input{
 				UserID:  tc.userID,
@@ -57,10 +54,7 @@ func TestProfileInject_TwentyCases(t *testing.T) {
 func TestProfileInject_NoProfileNoPanic(t *testing.T) {
 	ctx := context.Background()
 	mem := store.NewMemoryStore()
-	exec, err := session.NewExecutorWithStore(ctx, mem)
-	if err != nil {
-		t.Fatal(err)
-	}
+	exec := newTestExecutor(t, mem)
 	out, err := exec.RunTurn(ctx, session.Input{
 		UserID:  "user-empty",
 		Message: "只是随便聊聊",
@@ -80,10 +74,7 @@ func TestProfileInject_DistressMode(t *testing.T) {
 	_ = mem.UpsertProfile(ctx, store.RelationshipProfile{
 		UserID: "u09", CurrentIssue: "催婚压力",
 	})
-	exec, err := session.NewExecutorWithStore(ctx, mem)
-	if err != nil {
-		t.Fatal(err)
-	}
+	exec := newTestExecutor(t, mem)
 	out, err := exec.RunTurn(ctx, session.Input{
 		UserID: "u09", Message: "撑不住", Mode: "distress",
 	})

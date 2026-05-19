@@ -9,6 +9,7 @@ import (
 )
 
 func TestStreamGraph_EmitsTokens(t *testing.T) {
+	t.Setenv("LLM_PROVIDER", "fake")
 	ctx := context.Background()
 	runnable, err := session.NewStreamGraph(ctx)
 	if err != nil {
@@ -26,7 +27,7 @@ func TestStreamGraph_EmitsTokens(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stream: %v", err)
 	}
-	if !strings.Contains(got.String(), "听到") {
+	if !strings.Contains(got.String(), "洪峰") {
 		t.Fatalf("unexpected reply: %q", got.String())
 	}
 }

@@ -22,3 +22,10 @@ Thumbs.db
 .scratch/req.json
 .scratch/req-*.json
 .scratch/server.pid
+.scratch/server-test.pid
+
+# Go / VS Code debug binaries
+**/__debug_bin.exe
+
+# Hertz static FS compress cache (web assets use Compress: false)
+*.hertz.gz

@@ -14,6 +14,7 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 
+	"github.com/huodaoshi/harness/backend/internal/chatmodel"
 	"github.com/huodaoshi/harness/backend/internal/httpserver"
 	"github.com/huodaoshi/harness/backend/internal/session"
 	"github.com/huodaoshi/harness/backend/internal/store"
@@ -108,7 +109,7 @@ func TestStreamHandler_CrisisScriptsTable(t *testing.T) {
 func newTestExecutor(t *testing.T) *session.Executor {
 	t.Helper()
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
+	exec, err := session.NewExecutorWithGateway(ctx, store.NewMemoryStore(), chatmodel.NewFakeGateway(), chatmodel.Config{Provider: "fake"})
 	if err != nil {
 		t.Fatalf("executor: %v", err)
 	}

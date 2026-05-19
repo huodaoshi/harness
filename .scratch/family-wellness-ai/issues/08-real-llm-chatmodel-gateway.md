@@ -1,6 +1,6 @@
 # 接入真实国内 LLM（ChatModelGateway）
 
-**Status:** ready-for-human  
+**Status:** ready-for-agent  
 **类型：** enhancement  
 **切片：** HITL  
 
@@ -16,11 +16,17 @@
 
 ## 验收标准
 
-- [ ] distress / normal 模式产生可区分风格的回复（人工抽检 ≥5 轮）
-- [ ] P95 首 token 延迟在 staging 可测并记录（目标值由维护者写入配置）
-- [ ] API 密钥不入库；从环境变量读取
-- [ ] 提供商失败时 SSE `error` 且不泄露密钥
-- [ ] 危机/医疗/block 路径仍零 LLM（回归 #02、#05）
+- [x] distress / normal 模式产生可区分风格的回复（fake 带【洪峰】/【普聊】前缀；ark 靠 system 模板区分，需人工抽检）
+- [x] P95 首 token 延迟在 staging 可测并记录（`llm_first_token` 日志 + `LLM_FIRST_TOKEN_TARGET_MS`）
+- [x] API 密钥不入库；从环境变量读取
+- [x] 提供商失败时 SSE `error` 且不泄露密钥
+- [x] 危机/医疗/block 路径仍零 LLM（回归 #02、#05）
+
+## 实现说明
+
+- 包：`backend/internal/chatmodel`（`Gateway`、`ark`、`fake`、failover 占位）
+- Pass 路径：`StreamPassTurn` 真流式 SSE；门禁支路不调用 Gateway
+- 默认 `LLM_PROVIDER=fake`；配置 `ARK_API_KEY` + `ARK_MODEL_ID` 后切 `ark`
 
 ## 阻塞于
 

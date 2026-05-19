@@ -1,8 +1,9 @@
 import { consumeSSE } from "./sse.js";
-import { userId } from "./user.js";
+import { apiHeaders, userId } from "./user.js";
 import { initProfileScreen } from "./profile.js";
 
 const STORAGE_SESSION = "fwa_session_id";
+const STORAGE_SUMMARY_DISMISS = "fwa_summary_dismissed_";
 
 const $ = (id) => document.getElementById(id);
 
@@ -15,11 +16,15 @@ const btnNormal = $("btn-normal");
 const btnProfileWelcome = $("btn-profile-welcome");
 const btnProfileChat = $("btn-profile-chat");
 const btnBack = $("btn-back");
+const btnEndSession = $("btn-end-session");
 const chatModeLabel = $("chat-mode-label");
 const sessionHint = $("session-hint");
 const messagesEl = $("messages");
 const crisisBanner = $("crisis-banner");
 const crisisBody = $("crisis-body");
+const summaryCard = $("summary-card");
+const summaryList = $("summary-list");
+const btnSummaryClose = $("btn-summary-close");
 const errorBar = $("error-bar");
 const chatForm = $("chat-form");
 const messageInput = $("message-input");
@@ -30,6 +35,7 @@ let mode = "normal";
 let sessionId = sessionStorage.getItem(STORAGE_SESSION) ?? "";
 let streaming = false;
 let inCrisis = false;
+let sessionEnded = false;
 
 function setButtonsEnabled(enabled) {
   btnDistress.disabled = !enabled;
@@ -57,13 +63,23 @@ function showScreen(name) {
 
 const profileUI = initProfileScreen({ onNavigate: showScreen });
 
+function resetChatSession() {
+  sessionId = "";
+  sessionEnded = false;
+  inCrisis = false;
+  sessionStorage.removeItem(STORAGE_SESSION);
+  messagesEl.replaceChildren();
+  crisisBanner.hidden = true;
+  summaryCard.hidden = true;
+  screenChat.classList.remove("screen--crisis");
+  sessionHint.textContent = "";
+}
+
 function enterChat(selectedMode) {
+  resetChatSession();
   mode = selectedMode;
   chatModeLabel.textContent =
     mode === "distress" ? "洪峰陪伴" : "轻松聊聊";
-  sessionHint.textContent = sessionId
-    ? `会话 ${sessionId.slice(0, 8)}…`
-    : "";
   showScreen("chat");
   messageInput.focus();
 }
@@ -100,8 +116,9 @@ function appendBubble(role, text = "") {
 
 function setStreaming(active) {
   streaming = active;
-  messageInput.disabled = active || inCrisis;
-  btnSend.disabled = active || inCrisis;
+  messageInput.disabled = active || inCrisis || sessionEnded;
+  btnSend.disabled = active || inCrisis || sessionEnded;
+  if (btnEndSession) btnEndSession.disabled = active || inCrisis || !sessionId;
 }
 
 function showGateCard(body, title = "你此刻的安全最重要") {
@@ -115,7 +132,65 @@ function showGateCard(body, title = "你此刻的安全最重要") {
   btnSend.disabled = true;
 }
 
+function summaryDismissKey(id) {
+  return STORAGE_SUMMARY_DISMISS + id;
+}
+
+function showSummaryCard(summary3) {
+  if (!sessionId || sessionStorage.getItem(summaryDismissKey(sessionId)) === "1") {
+    return;
+  }
+  summaryList.replaceChildren();
+  for (const line of summary3) {
+    const li = document.createElement("li");
+    li.textContent = line;
+    summaryList.appendChild(li);
+  }
+  summaryCard.hidden = false;
+}
+
+function hideSummaryCard() {
+  summaryCard.hidden = true;
+  if (sessionId) {
+    sessionStorage.setItem(summaryDismissKey(sessionId), "1");
+  }
+}
+
+btnSummaryClose?.addEventListener("click", hideSummaryCard);
+
+async function endSession() {
+  if (!sessionId || sessionEnded || streaming) return;
+  clearError();
+  try {
+    const res = await fetch("/v1/sessions/end", {
+      method: "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify({ session_id: sessionId, user_id: userId() }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error ?? `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    sessionEnded = true;
+    messageInput.disabled = true;
+    btnSend.disabled = true;
+    if (btnEndSession) btnEndSession.disabled = true;
+    if (Array.isArray(data.summary3)) {
+      showSummaryCard(data.summary3);
+    }
+  } catch (err) {
+    showError(err instanceof Error ? err.message : "结束会话失败");
+  }
+}
+
+btnEndSession?.addEventListener("click", endSession);
+
 async function streamMessage(text) {
+  if (sessionEnded) {
+    showError("本场对话已结束，请返回首页开始新会话。");
+    return;
+  }
   clearError();
   setStreaming(true);
 
@@ -133,9 +208,16 @@ async function streamMessage(text) {
   try {
     const res = await fetch("/v1/sessions/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...apiHeaders(false) },
       body: JSON.stringify(payload),
     });
+
+    if (res.status === 409) {
+      const err = await res.json().catch(() => ({}));
+      showError(err.error ?? "会话已满，请结束本场对话。");
+      assistantEl.remove();
+      return;
+    }
 
     await consumeSSE(res, async ({ event, data }) => {
       let parsed;
@@ -157,6 +239,7 @@ async function streamMessage(text) {
             sessionStorage.setItem(STORAGE_SESSION, sessionId);
             sessionHint.textContent = `会话 ${sessionId.slice(0, 8)}…`;
           }
+          if (btnEndSession) btnEndSession.disabled = false;
           break;
         case "crisis":
           assistantEl.remove();
@@ -176,6 +259,8 @@ async function streamMessage(text) {
           assistantEl.classList.remove("bubble--typing");
           if (parsed.code === "content_blocked") {
             showError(parsed.message ?? "这条内容无法继续讨论");
+          } else if (parsed.code === "session_message_cap") {
+            showError(parsed.message ?? "本场对话已达到消息上限");
           } else {
             showError(parsed.message ?? parsed.code ?? "服务暂时不可用");
           }
@@ -194,7 +279,7 @@ async function streamMessage(text) {
 
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  if (streaming || inCrisis) return;
+  if (streaming || inCrisis || sessionEnded) return;
 
   const text = messageInput.value.trim();
   if (!text) return;

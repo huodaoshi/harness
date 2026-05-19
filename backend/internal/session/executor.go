@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cloudwego/eino/compose"
+	"github.com/huodaoshi/harness/backend/internal/chatmodel"
 	"github.com/huodaoshi/harness/backend/internal/safety"
 	"github.com/huodaoshi/harness/backend/internal/store"
 )
@@ -13,13 +14,15 @@ import (
 type Executor struct {
 	Runnable  compose.Runnable[Input, TurnOutput]
 	ChatCalls *FakeChatCallCounter
+	Gateway   chatmodel.Gateway
+	LLMConfig chatmodel.Config
 	Evaluator *safety.Evaluator
 	Templates *safety.TemplateStore
 	Boundary  *safety.BoundaryStore
 	Store     store.Store
 }
 
-// NewExecutor builds the full S3 graph with store from environment.
+// NewExecutor builds the full graph with store from environment.
 func NewExecutor(ctx context.Context) (*Executor, error) {
 	st, err := store.NewFromEnv(ctx)
 	if err != nil {
@@ -28,8 +31,17 @@ func NewExecutor(ctx context.Context) (*Executor, error) {
 	return NewExecutorWithStore(ctx, st)
 }
 
-// NewExecutorWithStore is for tests and explicit wiring.
+// NewExecutorWithStore is for tests and explicit wiring (uses LLM_PROVIDER / fake default).
 func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error) {
+	gw, cfg, err := chatmodel.NewGatewayFromEnv(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("gateway: %w", err)
+	}
+	return NewExecutorWithGateway(ctx, st, gw, cfg)
+}
+
+// NewExecutorWithGateway wires an explicit ChatModel gateway (tests).
+func NewExecutorWithGateway(ctx context.Context, st store.Store, gw chatmodel.Gateway, cfg chatmodel.Config) (*Executor, error) {
 	eval, err := safety.NewEvaluator()
 	if err != nil {
 		return nil, fmt.Errorf("evaluator: %w", err)
@@ -43,13 +55,15 @@ func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error
 		return nil, fmt.Errorf("boundary: %w", err)
 	}
 	calls := &FakeChatCallCounter{}
-	runnable, err := newSessionGraph(ctx, eval, templates, boundary, st, calls)
+	runnable, err := newSessionGraph(ctx, eval, templates, boundary, st, gw, calls)
 	if err != nil {
 		return nil, err
 	}
 	return &Executor{
 		Runnable:  runnable,
 		ChatCalls: calls,
+		Gateway:   gw,
+		LLMConfig: cfg,
 		Evaluator: eval,
 		Templates: templates,
 		Boundary:  boundary,
@@ -57,7 +71,7 @@ func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error
 	}, nil
 }
 
-// RunTurn executes one turn. Gate branches do not increment ChatCalls.
+// RunTurn executes one turn via the graph (used for gate branches and tests).
 func (e *Executor) RunTurn(ctx context.Context, in Input) (TurnOutcome, error) {
 	out, err := e.Runnable.Invoke(ctx, in)
 	if err != nil {
@@ -81,5 +95,9 @@ func (e *Executor) RunTurn(ctx context.Context, in Input) (TurnOutcome, error) {
 
 func CompileDefaultGraph(ctx context.Context) (compose.Runnable[Input, string], error) {
 	calls := &FakeChatCallCounter{}
-	return newChatOnlyGraph(ctx, calls)
+	gw, _, err := chatmodel.NewGatewayFromEnv(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return newChatOnlyGraph(ctx, gw, calls)
 }

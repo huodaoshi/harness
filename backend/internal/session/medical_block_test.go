@@ -5,15 +5,11 @@ import (
 	"testing"
 
 	"github.com/huodaoshi/harness/backend/internal/session"
-	"github.com/huodaoshi/harness/backend/internal/store"
 )
 
 func TestMedicalBoundary_ZeroChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
-	if err != nil {
-		t.Fatal(err)
-	}
+	exec := newTestMemoryExecutor(t)
 	exec.ChatCalls.Reset()
 	out, err := exec.RunTurn(ctx, session.Input{
 		UserID:  "u-med",
@@ -33,10 +29,7 @@ func TestMedicalBoundary_ZeroChatCalls(t *testing.T) {
 
 func TestBlock_ZeroChatCalls(t *testing.T) {
 	ctx := context.Background()
-	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
-	if err != nil {
-		t.Fatal(err)
-	}
+	exec := newTestMemoryExecutor(t)
 	exec.ChatCalls.Reset()
 	out, err := exec.RunTurn(ctx, session.Input{
 		UserID:  "u-blk",

@@ -3,10 +3,10 @@ package session
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/schema"
+	"github.com/huodaoshi/harness/backend/internal/chatmodel"
 	"github.com/huodaoshi/harness/backend/internal/safety"
 	"github.com/huodaoshi/harness/backend/internal/store"
 )
@@ -20,13 +20,14 @@ const (
 	nodeFakeChat      = "fake_chat"
 )
 
-// newSessionGraph: START → safety_gate → branch → crisis | medical | block | profile_inject → fake_chat → END
+// newSessionGraph: START → safety_gate → branch → crisis | medical | block | profile_inject → chat_model → END
 func newSessionGraph(
 	ctx context.Context,
 	eval *safety.Evaluator,
 	templates *safety.TemplateStore,
 	boundary *safety.BoundaryStore,
 	st store.Store,
+	gw chatmodel.Gateway,
 	calls *FakeChatCallCounter,
 ) (compose.Runnable[Input, TurnOutput], error) {
 	g := compose.NewGraph[Input, TurnOutput]()
@@ -85,7 +86,15 @@ func newSessionGraph(
 
 	chatNode := compose.InvokableLambda(func(ctx context.Context, enriched EnrichedChatInput) (TurnOutput, error) {
 		calls.Inc()
-		chat := fakeReplyWithInject(enriched.Routed.Input, enriched.InjectBlock)
+		req := chatmodel.Request{
+			Mode:        enriched.Routed.Input.Mode,
+			Message:     enriched.Routed.Input.Message,
+			InjectBlock: enriched.InjectBlock,
+		}
+		chat, err := gw.Generate(ctx, req)
+		if err != nil {
+			return TurnOutput{}, err
+		}
 		return TurnOutput{
 			Chat:        chat,
 			ChatUsed:    true,
@@ -93,7 +102,7 @@ func newSessionGraph(
 		}, nil
 	})
 	if err := g.AddLambdaNode(nodeFakeChat, chatNode); err != nil {
-		return nil, fmt.Errorf("add fake_chat: %w", err)
+		return nil, fmt.Errorf("add chat_model: %w", err)
 	}
 
 	branch := compose.NewGraphBranch(func(ctx context.Context, routed RoutedInput) (string, error) {
@@ -154,21 +163,17 @@ func loadInjectBlock(ctx context.Context, st store.Store, userID string) (string
 	return store.BuildInjectBlock(profile, summary), nil
 }
 
-func fakeReplyWithInject(in Input, injectBlock string) string {
-	base := fakeReply(in)
-	if strings.TrimSpace(injectBlock) == "" {
-		return base
-	}
-	return "【已读上下文】\n" + injectBlock + "\n---\n" + base
-}
-
 // newChatOnlyGraph is the Spike S1 streaming graph (pass path only, no profile inject).
-func newChatOnlyGraph(ctx context.Context, calls *FakeChatCallCounter) (compose.Runnable[Input, string], error) {
+func newChatOnlyGraph(ctx context.Context, gw chatmodel.Gateway, calls *FakeChatCallCounter) (compose.Runnable[Input, string], error) {
 	g := compose.NewGraph[Input, string]()
 
 	node := compose.StreamableLambda(func(ctx context.Context, in Input) (*schema.StreamReader[string], error) {
 		calls.Inc()
-		reply := fakeReply(in)
+		text, err := gw.Generate(ctx, chatmodel.Request{Mode: in.Mode, Message: in.Message})
+		if err != nil {
+			return nil, err
+		}
+		reply := text
 		sr, sw := schema.Pipe[string](len([]rune(reply)) + 1)
 		go func() {
 			defer sw.Close()
@@ -195,24 +200,11 @@ func newChatOnlyGraph(ctx context.Context, calls *FakeChatCallCounter) (compose.
 
 func NewStreamGraph(ctx context.Context) (compose.Runnable[Input, string], error) {
 	calls := &FakeChatCallCounter{}
-	return newChatOnlyGraph(ctx, calls)
-}
-
-func fakeReply(in Input) string {
-	return fakeReplyText(in.Message, in.Mode)
-}
-
-func fakeReplyText(message, mode string) string {
-	msg := trim(message)
-	if msg == "" {
-		return "我在这里，你愿意多说一点吗？"
+	gw, _, err := chatmodel.NewGatewayFromEnv(ctx)
+	if err != nil {
+		return nil, err
 	}
-	switch mode {
-	case "distress":
-		return "我听到了。此刻很难受是正常的，我们先慢慢说。"
-	default:
-		return "我听到你了：" + msg
-	}
+	return newChatOnlyGraph(ctx, gw, calls)
 }
 
 func trim(s string) string {

@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: 启动并调试",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/backend/cmd/server",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "showLog": true,
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "USE_MEMORY_STORE": "true",
+        "LLM_PROVIDER": "ark",
+        "HTTP_ADDR": ":8080"
+      }
+    },
+    {
+      "name": "Backend: Attach (dlv :2345)",
+      "type": "go",
+      "request": "attach",
+      "mode": "remote",
+      "host": "127.0.0.1",
+      "port": 2345,
+      "cwd": "${workspaceFolder}/backend",
+      "substitutePath": [
+        {
+          "from": "${workspaceFolder}/backend",
+          "to": "${workspaceFolder}/backend"
+        }
+      ]
+    }
+  ]
+}

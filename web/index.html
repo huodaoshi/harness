@@ -62,6 +62,14 @@
 
         <div id="messages" class="messages" aria-live="polite"></div>
 
+        <div id="summary-card" class="summary-card" hidden>
+          <div class="summary-card__head">
+            <h2>本场小结</h2>
+            <button type="button" id="btn-summary-close" class="btn-icon" aria-label="关闭">×</button>
+          </div>
+          <ol id="summary-list"></ol>
+        </div>
+
         <div id="error-bar" class="error-bar" hidden role="alert"></div>
 
         <form id="chat-form" class="composer">
@@ -73,6 +81,7 @@
             enterkeyhint="send"
           ></textarea>
           <button type="submit" id="btn-send" class="btn btn--primary btn--send">发送</button>
+          <button type="button" id="btn-end-session" class="btn btn--ghost btn--send">结束</button>
         </form>
       </section>
 
