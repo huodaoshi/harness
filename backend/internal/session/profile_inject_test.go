@@ -35,8 +35,8 @@ func TestProfileInject_TwentyCases(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if out.Crisis != nil {
-				t.Fatal("unexpected crisis")
+			if out.Crisis != nil || out.Medical != nil || out.Block != nil {
+				t.Fatal("unexpected gate branch")
 			}
 
 			blob := out.Chat + "\n" + out.InjectBlock

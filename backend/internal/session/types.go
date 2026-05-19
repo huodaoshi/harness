@@ -21,9 +21,11 @@ type EnrichedChatInput struct {
 	InjectBlock string
 }
 
-// TurnOutput is the graph result for one turn (crisis branch or chat branch).
+// TurnOutput is the graph result for one turn (gate branch or chat branch).
 type TurnOutput struct {
 	Crisis      *safety.CrisisPayload
+	Medical     *safety.MedicalPayload
+	Block       *safety.BlockPayload
 	Chat        string
 	ChatUsed    bool
 	InjectBlock string
@@ -32,6 +34,8 @@ type TurnOutput struct {
 // TurnOutcome is returned to the HTTP layer after one turn.
 type TurnOutcome struct {
 	Crisis      *safety.CrisisPayload
+	Medical     *safety.MedicalPayload
+	Block       *safety.BlockPayload
 	Chat        string
 	ChatCalls   int64
 	InjectBlock string

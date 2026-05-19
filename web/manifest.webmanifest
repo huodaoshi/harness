@@ -1,0 +1,11 @@
+{
+  "name": "关系情绪 AI",
+  "short_name": "情绪AI",
+  "description": "安全、私密的情绪倾诉空间",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ef",
+  "theme_color": "#f7f3ef",
+  "lang": "zh-CN",
+  "icons": []
+}

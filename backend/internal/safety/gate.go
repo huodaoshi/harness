@@ -8,9 +8,11 @@ import (
 type Level string
 
 const (
-	LevelPass            Level = "pass"
-	LevelCrisisSelfHarm  Level = "crisis_self_harm"
-	LevelCrisisViolence  Level = "crisis_violence"
+	LevelPass           Level = "pass"
+	LevelCrisisSelfHarm Level = "crisis_self_harm"
+	LevelCrisisViolence Level = "crisis_violence"
+	LevelMedical        Level = "medical_boundary"
+	LevelBlock          Level = "block"
 )
 
 // Result is the output of L1 SafetyGate evaluation.
@@ -21,6 +23,19 @@ type Result struct {
 
 func (r Result) IsCrisis() bool {
 	return r.Level == LevelCrisisSelfHarm || r.Level == LevelCrisisViolence
+}
+
+func (r Result) IsMedical() bool {
+	return r.Level == LevelMedical
+}
+
+func (r Result) IsBlock() bool {
+	return r.Level == LevelBlock
+}
+
+// StopsLLM is true when the gate outcome must not invoke ChatModel.
+func (r Result) StopsLLM() bool {
+	return r.IsCrisis() || r.IsMedical() || r.IsBlock()
 }
 
 // Evaluator runs L1 keyword rules.
@@ -37,7 +52,7 @@ func NewEvaluator() (*Evaluator, error) {
 	return &Evaluator{rules: rules}, nil
 }
 
-// Evaluate matches message text against L1 rules.
+// Evaluate matches message text against L1 rules (first match wins, YAML order).
 func (e *Evaluator) Evaluate(message string) Result {
 	text := strings.ToLower(strings.TrimSpace(message))
 	if text == "" {

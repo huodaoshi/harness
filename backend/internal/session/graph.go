@@ -14,15 +14,18 @@ import (
 const (
 	nodeSafety        = "safety_gate"
 	nodeCrisis        = "crisis_branch"
+	nodeMedical       = "medical_branch"
+	nodeBlock         = "block_branch"
 	nodeProfileInject = "profile_inject"
 	nodeFakeChat      = "fake_chat"
 )
 
-// newSessionGraph: START → safety_gate → branch → crisis | profile_inject → fake_chat → END
+// newSessionGraph: START → safety_gate → branch → crisis | medical | block | profile_inject → fake_chat → END
 func newSessionGraph(
 	ctx context.Context,
 	eval *safety.Evaluator,
 	templates *safety.TemplateStore,
+	boundary *safety.BoundaryStore,
 	st store.Store,
 	calls *FakeChatCallCounter,
 ) (compose.Runnable[Input, TurnOutput], error) {
@@ -45,6 +48,28 @@ func newSessionGraph(
 	})
 	if err := g.AddLambdaNode(nodeCrisis, crisisNode); err != nil {
 		return nil, fmt.Errorf("add crisis_branch: %w", err)
+	}
+
+	medicalNode := compose.InvokableLambda(func(ctx context.Context, routed RoutedInput) (TurnOutput, error) {
+		payload, ok := boundary.RenderMedical(routed.Gate)
+		if !ok {
+			return TurnOutput{}, fmt.Errorf("missing medical template %q", routed.Gate.TemplateID)
+		}
+		return TurnOutput{Medical: &payload}, nil
+	})
+	if err := g.AddLambdaNode(nodeMedical, medicalNode); err != nil {
+		return nil, fmt.Errorf("add medical_branch: %w", err)
+	}
+
+	blockNode := compose.InvokableLambda(func(ctx context.Context, routed RoutedInput) (TurnOutput, error) {
+		payload, ok := boundary.RenderBlock(routed.Gate)
+		if !ok {
+			return TurnOutput{}, fmt.Errorf("missing block template %q", routed.Gate.TemplateID)
+		}
+		return TurnOutput{Block: &payload}, nil
+	})
+	if err := g.AddLambdaNode(nodeBlock, blockNode); err != nil {
+		return nil, fmt.Errorf("add block_branch: %w", err)
 	}
 
 	profileNode := compose.InvokableLambda(func(ctx context.Context, routed RoutedInput) (EnrichedChatInput, error) {
@@ -72,11 +97,22 @@ func newSessionGraph(
 	}
 
 	branch := compose.NewGraphBranch(func(ctx context.Context, routed RoutedInput) (string, error) {
-		if routed.Gate.IsCrisis() {
+		switch {
+		case routed.Gate.IsCrisis():
 			return nodeCrisis, nil
+		case routed.Gate.IsMedical():
+			return nodeMedical, nil
+		case routed.Gate.IsBlock():
+			return nodeBlock, nil
+		default:
+			return nodeProfileInject, nil
 		}
-		return nodeProfileInject, nil
-	}, map[string]bool{nodeCrisis: true, nodeProfileInject: true})
+	}, map[string]bool{
+		nodeCrisis:        true,
+		nodeMedical:       true,
+		nodeBlock:         true,
+		nodeProfileInject: true,
+	})
 	if err := g.AddBranch(nodeSafety, branch); err != nil {
 		return nil, fmt.Errorf("add branch: %w", err)
 	}
@@ -85,6 +121,12 @@ func newSessionGraph(
 		return nil, err
 	}
 	if err := g.AddEdge(nodeCrisis, compose.END); err != nil {
+		return nil, err
+	}
+	if err := g.AddEdge(nodeMedical, compose.END); err != nil {
+		return nil, err
+	}
+	if err := g.AddEdge(nodeBlock, compose.END); err != nil {
 		return nil, err
 	}
 	if err := g.AddEdge(nodeProfileInject, nodeFakeChat); err != nil {

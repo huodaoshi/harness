@@ -31,10 +31,21 @@ type donePayload struct {
 	SessionID string `json:"session_id"`
 }
 
-type crisisPayload struct {
+type templatePayload struct {
 	TemplateID string `json:"template_id"`
 	Body       string `json:"body"`
 }
+
+type errorPayload struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// SSE contract (#05):
+//   - crisis  → { template_id, body }
+//   - medical → { template_id, body }  (fixed boundary copy, no LLM)
+//   - error   → { code, message }      (block + stream failures; block uses content_blocked)
+//   - token / done → pass path only
 
 // NewStreamHandler returns the session SSE handler (SafetyGate + chat stream).
 func NewStreamHandler(exec *session.Executor) app.HandlerFunc {
@@ -73,22 +84,23 @@ func NewStreamHandler(exec *session.Executor) app.HandlerFunc {
 			return
 		}
 
+		gate := exec.Evaluator.Evaluate(req.Message)
+
 		if outcome.Crisis != nil {
-			safety.Audit(sessionID, safety.Result{
-				Level:      safety.Level(outcome.Crisis.TemplateID),
-				TemplateID: outcome.Crisis.TemplateID,
-			})
-			body, err := json.Marshal(crisisPayload{
-				TemplateID: outcome.Crisis.TemplateID,
-				Body:       outcome.Crisis.Body,
-			})
-			if err != nil {
-				writeStreamError(w, err)
-				return
-			}
-			if err := w.WriteEvent("", "crisis", body); err != nil {
-				fmt.Printf("sse crisis write: %v\n", err)
-			}
+			safety.Audit(sessionID, gate, req.Message)
+			writeTemplateEvent(w, "crisis", outcome.Crisis.TemplateID, outcome.Crisis.Body)
+			return
+		}
+
+		if outcome.Medical != nil {
+			safety.Audit(sessionID, gate, req.Message)
+			writeTemplateEvent(w, "medical", outcome.Medical.TemplateID, outcome.Medical.Body)
+			return
+		}
+
+		if outcome.Block != nil {
+			safety.Audit(sessionID, gate, req.Message)
+			writeGateError(w, outcome.Block.Code, outcome.Block.Message)
 			return
 		}
 
@@ -113,10 +125,22 @@ func NewStreamHandler(exec *session.Executor) app.HandlerFunc {
 	}
 }
 
+func writeTemplateEvent(w *sse.Writer, event, templateID, body string) {
+	payload, err := json.Marshal(templatePayload{TemplateID: templateID, Body: body})
+	if err != nil {
+		writeStreamError(w, err)
+		return
+	}
+	if err := w.WriteEvent("", event, payload); err != nil {
+		fmt.Printf("sse %s write: %v\n", event, err)
+	}
+}
+
+func writeGateError(w *sse.Writer, code, message string) {
+	body, _ := json.Marshal(errorPayload{Code: code, Message: message})
+	_ = w.WriteEvent("", "error", body)
+}
+
 func writeStreamError(w *sse.Writer, err error) {
-	errBody, _ := json.Marshal(map[string]string{
-		"code":    "stream_failed",
-		"message": err.Error(),
-	})
-	_ = w.WriteEvent("", "error", errBody)
+	writeGateError(w, "stream_failed", err.Error())
 }

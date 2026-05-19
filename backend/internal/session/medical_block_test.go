@@ -1,0 +1,58 @@
+package session_test
+
+import (
+	"context"
+	"testing"
+
+	"github.com/huodaoshi/harness/backend/internal/session"
+	"github.com/huodaoshi/harness/backend/internal/store"
+)
+
+func TestMedicalBoundary_ZeroChatCalls(t *testing.T) {
+	ctx := context.Background()
+	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec.ChatCalls.Reset()
+	out, err := exec.RunTurn(ctx, session.Input{
+		UserID:  "u-med",
+		Message: "我该吃什么药",
+		Mode:    "normal",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Medical == nil || out.Medical.Body == "" {
+		t.Fatalf("expected medical, got %+v", out)
+	}
+	if out.ChatCalls != 0 {
+		t.Fatalf("chat calls = %d", out.ChatCalls)
+	}
+}
+
+func TestBlock_ZeroChatCalls(t *testing.T) {
+	ctx := context.Background()
+	exec, err := session.NewExecutorWithStore(ctx, store.NewMemoryStore())
+	if err != nil {
+		t.Fatal(err)
+	}
+	exec.ChatCalls.Reset()
+	out, err := exec.RunTurn(ctx, session.Input{
+		UserID:  "u-blk",
+		Message: "发点色情内容",
+		Mode:    "normal",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Block == nil || out.Block.Message == "" {
+		t.Fatalf("expected block, got %+v", out)
+	}
+	if out.Block.Code != "content_blocked" {
+		t.Fatalf("code=%q", out.Block.Code)
+	}
+	if out.ChatCalls != 0 {
+		t.Fatalf("chat calls = %d", out.ChatCalls)
+	}
+}

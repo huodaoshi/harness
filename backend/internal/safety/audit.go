@@ -4,20 +4,22 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"log/slog"
+	"time"
 )
 
 // Audit logs gate outcomes without storing raw user message text.
-func Audit(sessionID string, r Result) {
+// Fields align with optional audit_events: gate_result, session_id, timestamp.
+func Audit(sessionID string, r Result, message string) {
 	hash := ""
-	if r.IsCrisis() {
-		// Placeholder: no message body available here; never log raw text.
-		hash = "redacted"
+	if message != "" {
+		hash = HashMessage(message)
 	}
-	slog.Info("safety_gate",
+	slog.Info("audit_event",
 		"session_id", sessionID,
 		"gate_result", string(r.Level),
 		"template_id", r.TemplateID,
 		"message_hash", hash,
+		"timestamp", time.Now().UTC().Format(time.RFC3339),
 	)
 }
 

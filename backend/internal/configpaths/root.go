@@ -19,3 +19,12 @@ func SafetyRules() string {
 func CrisisTemplatesZH() string {
 	return filepath.Join(BackendRoot(), "config", "crisis_templates", "zh-CN.json")
 }
+
+func BoundaryTemplatesZH() string {
+	return filepath.Join(BackendRoot(), "config", "boundary_templates", "zh-CN.json")
+}
+
+// WebRoot returns the harness web static assets directory (sibling of backend/).
+func WebRoot() string {
+	return filepath.Clean(filepath.Join(BackendRoot(), "..", "web"))
+}

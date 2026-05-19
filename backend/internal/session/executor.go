@@ -15,6 +15,7 @@ type Executor struct {
 	ChatCalls *FakeChatCallCounter
 	Evaluator *safety.Evaluator
 	Templates *safety.TemplateStore
+	Boundary  *safety.BoundaryStore
 	Store     store.Store
 }
 
@@ -37,8 +38,12 @@ func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error
 	if err != nil {
 		return nil, fmt.Errorf("templates: %w", err)
 	}
+	boundary, err := safety.NewBoundaryStore()
+	if err != nil {
+		return nil, fmt.Errorf("boundary: %w", err)
+	}
 	calls := &FakeChatCallCounter{}
-	runnable, err := newSessionGraph(ctx, eval, templates, st, calls)
+	runnable, err := newSessionGraph(ctx, eval, templates, boundary, st, calls)
 	if err != nil {
 		return nil, err
 	}
@@ -47,11 +52,12 @@ func NewExecutorWithStore(ctx context.Context, st store.Store) (*Executor, error
 		ChatCalls: calls,
 		Evaluator: eval,
 		Templates: templates,
+		Boundary:  boundary,
 		Store:     st,
 	}, nil
 }
 
-// RunTurn executes one turn. Crisis path does not increment ChatCalls.
+// RunTurn executes one turn. Gate branches do not increment ChatCalls.
 func (e *Executor) RunTurn(ctx context.Context, in Input) (TurnOutcome, error) {
 	out, err := e.Runnable.Invoke(ctx, in)
 	if err != nil {
@@ -59,6 +65,12 @@ func (e *Executor) RunTurn(ctx context.Context, in Input) (TurnOutcome, error) {
 	}
 	if out.Crisis != nil {
 		return TurnOutcome{Crisis: out.Crisis, ChatCalls: 0}, nil
+	}
+	if out.Medical != nil {
+		return TurnOutcome{Medical: out.Medical, ChatCalls: 0}, nil
+	}
+	if out.Block != nil {
+		return TurnOutcome{Block: out.Block, ChatCalls: 0}, nil
 	}
 	return TurnOutcome{
 		Chat:        out.Chat,

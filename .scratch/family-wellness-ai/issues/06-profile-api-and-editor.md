@@ -16,11 +16,15 @@
 
 ## 验收标准
 
-- [ ] GET 无档案时返回空对象或 404 语义明确，不崩溃
-- [ ] PUT 后 GET 回读一致
-- [ ] Web 表单可增删「重要他人」条目
-- [ ] 集成测试：PUT → stream 消息 → 断言 context 含新 `current_issue`
-- [ ] 鉴权与 `user_id` 隔离（可与 #12 简化 token 并存）
+- [x] GET 无档案时返回空对象或 404 语义明确，不崩溃
+- [x] PUT 后 GET 回读一致
+- [x] Web 表单可增删「重要他人」条目
+- [x] 集成测试：PUT → stream 消息 → 断言 context 含新 `current_issue`
+- [x] 鉴权与 `user_id` 隔离（可与 #12 简化 token 并存）
+
+## MVP 鉴权
+
+`user_id` 通过 query `?user_id=` 或请求头 `X-User-Id` 传递（与 Web `localStorage` 匿名 ID 对齐）。
 
 ## 阻塞于
 
