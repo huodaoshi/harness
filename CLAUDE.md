@@ -12,6 +12,11 @@
 
 与用户对话时使用简体中文。
 
+## 编辑器规则（Cursor / Claude）
+
+- **Cursor：** `.cursor/rules/`，规则文件后缀 **`.mdc`**
+- **Claude Code：** `.claude/rules/`，规则文件后缀 **`.md`**（与上列为内容镜像；改一侧时请同步另一侧）
+
 ## Agent 技能
 
 ### Issue tracker（问题跟踪）

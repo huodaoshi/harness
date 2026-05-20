@@ -1,0 +1,13 @@
+# Claude Rules（harness）
+
+| 文件 | 作用域 | 说明 |
+| ---- | ------ | ---- |
+| `docs-zh.md` | 全局 `alwaysApply` | 文档与 Agent 产出用简体中文 |
+| `windows-shell.md` | 全局 `alwaysApply` | PowerShell 勿用 `&&` |
+| `git.md` | `cli/**`, `backend/**` | 分支、`master`、GitHub PR |
+| `naming.md` | `cli/**`, `backend/**`, `**/*.go` | snake_case / camelCase 分层 |
+| `eino.md` | `backend/**/*.go` | Eino 编排；无 `backend/` 时不生效 |
+| `_lang/typescript.md` | `**/*.ts(x)` | CLI 等 TS 代码 |
+| `_lang/go.md` 等 | 各语言 glob | 有对应源码时生效；Go 测试**仅**允许 `backend/tests/**`；校验 `go run ./scripts/check_test_placement/` |
+
+**未跟踪时：** 新 rule 需 `git add .claude/rules/` 后才会进版本库。
