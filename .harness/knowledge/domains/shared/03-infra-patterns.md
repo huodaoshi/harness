@@ -13,7 +13,7 @@
 
 | 路径 | 说明 |
 |------|------|
-| `.harness/session/session-bootstrap.md` | 新会话注入文案 |
+| `.harness/session/session-bootstrap.md` | 新会话注入文案（默认启用 **caveman**） |
 | `.cursor/hooks.json` + `.cursor/hooks/*` | Cursor sessionStart |
 | `.claude/hooks/*` + `settings.json` 的 `hooks` | Claude Code SessionStart |
 | 模板 | `.agents/skills/init-knowledge/resources/session/`、`resources/hooks/` |

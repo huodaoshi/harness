@@ -1,5 +1,5 @@
 {
-  "detected_at": "2026-05-20T18:00:00+08:00",
+  "detected_at": "2026-05-20T20:00:00+08:00",
   "signals": {
     "monorepo_files": [],
     "lang_files": {
@@ -29,7 +29,10 @@
         "cli/src/rules-add.ts",
         "rules/",
         "skills/",
-        ".agents/skills/"
+        ".agents/skills/",
+        ".harness/knowledge/",
+        ".harness/workflow/",
+        ".harness/session/"
       ]
     }
   ]
