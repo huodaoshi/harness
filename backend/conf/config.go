@@ -129,14 +129,19 @@ type RedisConfig struct {
 	Required bool `yaml:"required"`
 }
 
-// Load reads conf/config.yaml and overlays conf/{APP_ENV}.yaml (default APP_ENV=local).
+const (
+	appConfigBase    = "config/app/config.yaml"
+	appConfigPattern = "config/app/%s.yaml"
+)
+
+// Load reads config/app/config.yaml and overlays config/app/{APP_ENV}.yaml (default APP_ENV=local).
 func Load() (*Config, error) {
-	base, err := readYAML("conf/config.yaml")
+	base, err := readYAML(appConfigBase)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("conf: config.yaml not found (run server from backend/): %w", err)
+			return nil, fmt.Errorf("conf: %s not found (run server from backend/): %w", appConfigBase, err)
 		}
-		return nil, fmt.Errorf("conf: read config.yaml: %w", err)
+		return nil, fmt.Errorf("conf: read %s: %w", appConfigBase, err)
 	}
 
 	cfg := &Config{}
@@ -150,7 +155,7 @@ func Load() (*Config, error) {
 	}
 	cfg.App.Env = env
 
-	overlayPath := fmt.Sprintf("conf/%s.yaml", env)
+	overlayPath := fmt.Sprintf(appConfigPattern, env)
 	if overlayData, oErr := readYAML(overlayPath); oErr == nil {
 		overlay := &Config{}
 		if err = yaml.Unmarshal(overlayData, overlay); err != nil {

@@ -4,7 +4,7 @@
 
 ```text
 backend/
-  conf/config.go                              →  tests/conf/config_test.go
+  conf/config.go（读 config/app/*.yaml）       →  tests/conf/config_test.go
   modules/wellness/application/*.go           →  tests/modules/wellness/application/*_test.go
   modules/wellness/infra/store/*.go           →  tests/modules/wellness/infra/store/*_test.go
   api/*.go                                    →  tests/httpapi/*_test.go（包名 `apitest`）

@@ -12,7 +12,9 @@ backend/
     application/                # 会话图、Executor
     infra/{store,safety,chatmodel,configpaths}/
   tests/                        # 镜像路径的 *_test.go
-  conf/  config/  cmd/server/
+  conf/          # Go：conf.Load()
+  config/        # 静态 YAML/JSON（app/ + wellness）
+  cmd/server/
 ```
 
 ## Spike S1–S3（当前）
@@ -58,7 +60,7 @@ docker compose up -d
 | `MONGODB_DB` | `family_wellness` |
 | `REDIS_ADDR` | `127.0.0.1:6379` |
 | `USE_MEMORY_STORE` | 未设置 → 连 Mongo；`true` → wellness 仅内存（仍连 Mongo/Redis 作 auth/限流） |
-| `rate_limit.stream_per_minute` | `60`（`conf/config.yaml`） |
+| `rate_limit.stream_per_minute` | `60`（`config/app/config.yaml`） |
 
 ## 开发
 
@@ -70,8 +72,8 @@ go run ./cmd/server
 
 配置（ADR-0002 P1-01）：
 
-- 分层 YAML：`conf/config.yaml` + `conf/{APP_ENV}.yaml`（默认 `APP_ENV=local`）
-- 须在 **`backend/` 目录**下启动，以便加载 `conf/`
+- 分层 YAML：`config/app/config.yaml` + `config/app/{APP_ENV}.yaml`（默认 `APP_ENV=local`），由 `conf` 包加载
+- 须在 **`backend/` 目录**下启动；`conf/` 仅 Go，`config/` 仅静态文件（见 `config/README.md`）
 - `HTTP_ADDR` 可覆盖 `app.port`；Mongo/Redis 见 `conf/connection_env.go` 与环境变量
 
 环境变量：
@@ -88,10 +90,10 @@ go run ./cmd/server
 - **MQ**：
   - `mq.provider=local`：`cmd/server` **内嵌**消费 `knowledge-ingest`（同进程）
   - `mq.provider=rocketmq`：独立运行 `go run ./cmd/knowledgeindexing`
-- 本地 embedding 默认 `fake`（`conf/local.yaml`）；生产可设 `embedding.provider=ark`
+- 本地 embedding 默认 `fake`（`config/app/local.yaml`）；生产可设 `embedding.provider=ark`
 
 ```text
-# Admin 登录（local 默认 admin/admin，见 conf/local.yaml）
+# Admin 登录（local 默认 admin/admin，见 config/app/local.yaml）
 curl -s -X POST http://localhost:8080/v1/auth/admin/login -H "Content-Type: application/json" -d "{\"username\":\"admin\",\"password\":\"admin\"}"
 
 # 提交 ingest（替换 TOKEN）
@@ -103,7 +105,7 @@ curl -s -X POST http://localhost:8080/v1/admin/spaces/1/ingest -H "Authorization
 - Wellness：`Authorization: Bearer <token>` **或** `X-Anon-ID: <uuid>`（游客 `user_id`=`anon:{uuid}`）
 - 已废弃：query `?user_id=` / `X-User-Id`
 - 短信：`POST /v1/auth/sms/send`、`POST /v1/auth/sms/verify`（`sms.provider=local` 时验证码打日志）
-- 本地需 **Redis**（`REDIS_ADDR`）与 **JWT_SECRET**（见 `conf/local.yaml`）
+- 本地需 **Redis**（`REDIS_ADDR`）与 **JWT_SECRET**（见 `config/app/local.yaml`）
 
 ## 验证
 

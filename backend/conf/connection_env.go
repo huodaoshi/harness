@@ -54,7 +54,7 @@ func applyConnectionEnv(cfg *Config) error {
 	}
 	if v := strings.TrimSpace(os.Getenv("ARK_MODEL_ID")); v != "" {
 		cfg.LLM.Model = v
-	} else 	if v := strings.TrimSpace(os.Getenv("LLM_MODEL_ID")); v != "" {
+	} else if v := strings.TrimSpace(os.Getenv("LLM_MODEL_ID")); v != "" {
 		cfg.LLM.Model = v
 	}
 	cfg.JWT.Secret = strings.TrimSpace(os.ExpandEnv(cfg.JWT.Secret))

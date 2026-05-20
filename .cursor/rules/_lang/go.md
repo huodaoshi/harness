@@ -68,6 +68,19 @@ func New(deps ...) Example { return &example{...} }
 - 函数长度上限以项目 lint 配置为准（typical: 80-300）
 - 圈复杂度上限以项目 lint 配置为准（typical: 15-30）
 
+## 配置目录（backend）
+
+`backend/conf` 与 `backend/config` 职责分离，**禁止混放**：
+
+| 目录 | 内容 | 禁止 |
+|------|------|------|
+| **`config/`** | 静态配置：YAML/JSON（`config/app/*.yaml` 应用层；根下 wellness 规则与模板） | 不要放 `.go` |
+| **`conf/`** | Go 包 `conf`：`Load()`、结构体、`connection_env.go` | 不要放 `.yaml`/`.json` |
+
+- 应用配置路径：`config/app/config.yaml` + `config/app/{APP_ENV}.yaml`（默认 `local`），由 `conf.Load()` 读取。
+- Wellness 静态路径：`config/safety_rules_v1.yaml` 等，由 `modules/wellness/infra/configpaths` 解析。
+- 启动工作目录：在 **`backend/`** 下执行 `go run ./cmd/server`，路径相对模块根。
+
 ## 测试
 
 - **目录**：测试文件放在 **`tests/`** 下，目录结构与源代码**镜像对应**，**不要**与 `.go` 源文件同目录并列。

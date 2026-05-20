@@ -7,7 +7,7 @@
 ```powershell
 cd d:\harness\backend
 docker compose up -d
-# 复制 .env.example → .env，设置 JWT_SECRET（见 conf/local.yaml）
+# 复制 .env.example → .env，设置 JWT_SECRET（见 backend/config/app/local.yaml）
 go run ./cmd/server
 ```
 

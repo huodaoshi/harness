@@ -16,7 +16,7 @@
 
 ## 验收标准
 
-- [x] `conf/config.yaml` + `conf/local.yaml` 存在；`APP_ENV=local` 可加载
+- [x] `config/app/config.yaml` + `config/app/local.yaml` 存在；`APP_ENV=local` 可加载（`conf` 包）
 - [x] `MONGODB_URI` / `REDIS_ADDR` 等环境变量覆盖与 ADR 一致
 - [x] `go test ./...` 全绿
 - [x] `go run ./cmd/server` 启动日志含配置端口与 infra ping 结果
