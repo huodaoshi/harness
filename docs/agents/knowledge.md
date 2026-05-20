@@ -50,6 +50,7 @@ Copy-Item .harness\knowledge\learner-workflow.md .agents\skills\init-knowledge\r
 ## 模板与规则源（仅 init 读取）
 
 - 模板：`.agents/skills/init-knowledge/templates/`
+- 功能工作流：`resources/workflow/feature-workflow.md` → `.harness/workflow/`（阶段 **C5**）
 - Session / Hook：`resources/session/session-bootstrap.md` → `.harness/session/`；`resources/hooks/` → `.cursor/hooks*`、`.claude/hooks*`（阶段 **D**）
 - 规则：`rules/cursor/_lang/*.mdc`、`rules/claude/_lang/*.md`（回退 `.cursor/rules/_lang/`）
 

@@ -14,6 +14,7 @@ harness/
 ├── .claude/rules/            # Claude Code 规则镜像
 ├── .harness/
 │   ├── knowledge/            # 项目知识库（index + domains + query）
+│   ├── workflow/             # 功能工作流（feature-workflow.md）
 │   └── session/              # sessionStart 注入（session-bootstrap.md）
 ├── docs/                     # agents 文档、cli-rules、ADR
 └── .scratch/                 # 功能分拣 PRD/issue（可选）

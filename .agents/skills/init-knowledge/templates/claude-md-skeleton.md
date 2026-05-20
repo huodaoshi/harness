@@ -32,7 +32,7 @@
 - **提交格式**：`<type>(<scope>): <subject>`，详见 `.cursor/rules/git.mdc` 或 `.claude/rules/git.md`（若存在）
 - **文档语言**：人类可读文档默认**简体中文**（见 `.cursor/rules/docs-zh.mdc` 或等价规则）
 - **Windows 终端**：勿用 `&&` 连接命令，见 `windows-shell` 规则
-- 其他约定见 **`.cursor/rules/`**、**`.claude/rules/`** 与 **`.harness/knowledge/`**
+- 其他约定见 **`.cursor/rules/`**、**`.claude/rules/`**、**`.harness/knowledge/`** 与 **`.harness/workflow/`**
 
 ## Agent 工作流（harness）
 
@@ -47,18 +47,15 @@
 - 根目录 **`CONTEXT.md`**、**`docs/adr/`** 按需建立，见 `docs/agents/domain.md`
 - 探索代码前若存在上述文件应先读；不存在则静默继续
 
-### 功能开发建议顺序
+### 功能工作流
 
-```
-明确需求 → （可选）prototype / grill-me / to-prd
-→ 实现 → 运行 index.yaml 中 validate_commands
-→ 有结构性变更时 [建议] learn
-```
+做**新功能、重构、修 bug、领 issue** 前，先 **Read** **`.harness/workflow/feature-workflow.md`**：
 
-- **计划拆 issue**：**to-issues** 技能
-- **大改架构前**：**improve-codebase-architecture** 或 **grill-with-docs**（若已有 CONTEXT/ADR）
+1. 按文首「先选哪一种工作类型」进入对应章节（**只跟一条流程，不要混用**）
+2. 遵守文内「全局硬规则」（开工前有 scope、收工前跑 `validate_commands`）
+3. 未在该章节列出的步骤**默认不做**
 
-### 实现阶段
+### 实现阶段（写代码时）
 
 1. 读取 **`.harness/knowledge/index.yaml`** 中目标 domain 的 `rules` 与 `skills[]`
 2. 先读 **`.harness/knowledge/query/<domain>.md`**（若存在）

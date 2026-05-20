@@ -34,6 +34,7 @@ pnpm --dir cli run type-check
 | 开发后增量 | **learn**（依赖 `index.yaml` + `learner-workflow.md`） |
 | 改学习规程 | 编辑 `.harness/knowledge/learner-workflow.md` → 复制到 `init-knowledge/resources/` |
 | 改 session / hook | 编辑 `.harness/session/`、`.cursor/hooks/` → 同步 `resources/` → `init-knowledge --hooks` |
+| 改功能工作流 | 编辑 `.harness/workflow/feature-workflow.md` → 同步 `resources/workflow/` → `init-knowledge --workflow` |
 
 ## 错误处理约定
 

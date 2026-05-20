@@ -7,6 +7,7 @@
 - 项目总览：**`CLAUDE.md`**
 - 知识库索引：**`.harness/knowledge/index.yaml`**（若存在）
 - 按域查询：**`.harness/knowledge/query/<domain>.md`**
+- 功能/重构流程：**`.harness/workflow/feature-workflow.md`**（做需求相关工作时）
 
 ## 常用技能（按需加载，勿臆造）
 
