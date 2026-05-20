@@ -1,20 +1,17 @@
-# Local overrides (APP_ENV=local).
+# Local overrides (APP_ENV=local).非机密项；密钥见 local.secrets.yaml（勿提交）。
 
 jwt:
   secret: "harness-local-dev-jwt-secret"
 
-sms:
-  provider: "local"
+wellness:
+  use_memory_store: true
 
-embedding:
-  provider: "fake"
+llm:
+  provider: ark
+  request_timeout: 90s
+  first_token_target_ms: 3000
 
-mq:
-  provider: "local"
-
-admin_static_login:
-  enabled: true
-  username: "admin"
-  password: "admin"
-  user_id: "static-admin"
-  uid: 1
+nextchat:
+  # access_codes: []   # 非空则启用访问口令（等同历史 CODE 环境变量）
+  # custom_models: "-all,+Harness@bytedance=ep-xxx"
+  # default_model: "Harness@bytedance"

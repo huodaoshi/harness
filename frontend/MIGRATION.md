@@ -1,50 +1,38 @@
 # NextChat → frontend 迁移清单
 
-对照目录：`NextChat/`（只读）。架构决策见 `docs/adr/0001-frontend-backend-split.md`。
+对照目录：`NextChat/`（只读）。术语与 Scaffold 范围见仓库根目录 `CONTEXT.md`（**Frontend Scaffold**）。
 
-## 第一期（里程碑 B）
+## Scaffold 验收（当前）
 
-### 从 NextChat 复制（保持路径在 `app/` 下）
+- [x] `GET /api/config`（Go + `hideUserApiKey` + 单模型 `customModels`）
+- [x] `POST /api/bytedance/*` 透明代理（`ARK_*`，不经 SafetyGate）
+- [x] 聊天主路径迁入，`yarn dev` 可打开 NextChat UI
+- [x] 删除根目录 `web/` MVP
+- [ ] Mask / locales 打磨（见 issue #04，不阻塞）
 
-- [ ] `app/components/`
-- [ ] `app/store/`
-- [ ] `app/client/`（将 `path()` 中的 baseUrl 改为 `getApiBaseUrl()` + `/api/...`）
-- [ ] `app/masks/` + `scripts`：`mask` / `mask:watch`（见 `package.json`）
-- [ ] `app/locales/`
-- [ ] `app/utils/`
-- [ ] `app/constant.ts`、`app/typing.ts`、`app/utils.ts`、`app/polyfill.ts`
-- [ ] `app/styles/`
-- [ ] `public/`
+## 从 NextChat 复制
 
-### 不要复制
+- [x] `app/components/`、`store/`、`client/`、`utils/`、`locales/`、`styles/`、`icons/`、`lib/`
+- [x] `app/masks/` + `yarn mask`
+- [x] `app/constant.ts`、`typing.ts`、`utils.ts`、`polyfill.ts`、`command.ts`
+- [x] `public/`
 
-- [ ] `app/api/`（已由 `backend/` 实现）
-- [ ] `app/config/server.ts`（密钥改读 backend 环境变量）
-- [ ] `src-tauri/`、`vercel.json`、根目录 Docker（除非单独决策）
+## 不要复制
 
-### 依赖与配置
+- `app/api/`（由 `backend/api/nextchat` 实现）
+- `app/config/server.ts`
+- `src-tauri/`、Vercel/Docker
 
-- [ ] 合并 `NextChat/package.json` 中运行时依赖
-- [ ] `next.config.mjs`：SVG（`@svgr/webpack`）、Sass、必要时 `rewrites` → backend
-- [ ] `app/config/client.ts`：仅客户端构建配置；运行时拉取 `GET {API_BASE}/api/config`
+## 改造要点
 
-### 改造点
+- `app/config/build.ts` / `client.ts`：无 Tauri 依赖
+- `app/mcp/actions.ts`：Scaffold 期 MCP 占位（`isMcpEnabled() === false`）
+- API 请求走同域 `/api`（`next.config.mjs` rewrites → backend :8080）
+- 设置页多厂商入口由 `/api/config` 隐藏，**不删**相关源码
 
-- [ ] 所有 `ApiPath.*` 请求前缀使用 `lib/harness/api-base.ts`
-- [ ] `lib/harness/headers.ts`：预留 `X-Harness-Mode`（第一期无 UI）
-- [ ] 删除对 `getServerSideConfig()` 的前端密钥依赖
+## 后续（非 Scaffold）
 
-### 验收
-
-- [ ] `backend` + `frontend` 同时运行，能打开聊天页
-- [ ] 豆包流式回复正常
-- [ ] 切换 Mask 正常
-- [ ] 设置页能读取 `/api/config`
-
-## 第二期
-
-- [ ] 其余 `/api/{provider}`
-- [ ] `app/mcp/`（Server Actions）
-- [ ] 插件、`/api/proxy`、WebDAV、Upstash
-- [ ] 关怀模式设置项 + `/v1/profile` + `/v1/sessions/stream`（鉴权头见 `lib/harness/auth.ts`）
-- [ ] 删除 `web/`
+- 替换临时路径 `/api/bytedance`
+- `/api/*` 挂 SafetyGate（若产品需要）
+- 关怀模式 UI + `/v1/sessions/stream` 接入
+- 收紧 `next.config.mjs` 中 `typescript.ignoreBuildErrors`（上游 TS 与 NextChat 组件命名）

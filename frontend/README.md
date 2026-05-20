@@ -1,25 +1,38 @@
 # frontend
 
-Harness 聊天 UI（从 [NextChat](../NextChat/) 迁移）。API 由 [backend](../backend/) 提供，本目录**不包含** `app/api/`。
+Harness 聊天 UI（从 [NextChat](../NextChat/) 迁移）。**仅 Web**；API 由 [backend](../backend/) 提供，本目录不包含 `app/api/`。
 
-## 本地开发
+## 本地开发（Scaffold E2E）
 
-1. 配置 `backend/.env`（见 `backend/.env.example`）
-2. 启动 backend：`cd backend && go run ./cmd/server`（默认 `:8080`）
-3. 本目录：
+1. 配置 backend：复制 `config/app/local.secrets.yaml.example` → `local.secrets.yaml` 并填写 `llm.api_key`、`llm.model`（见 `backend/config/app/README.md`）
+2. 启动 backend：
 
-```bash
-cp .env.example .env.local
+```powershell
+cd d:\harness\backend
+go run ./cmd/server
+```
+
+3. 启动 frontend：
+
+```powershell
+cd d:\harness\frontend
 yarn dev
 ```
 
-打开 http://localhost:3000 。默认通过 Next **rewrites** 将 `/api`、`/v1` 转发到 backend，无需 CORS。
+打开 http://localhost:3000 。`/api/*` 经 Next **rewrites** 转到 backend `:8080`。
 
-**关怀模式鉴权**（`lib/harness/auth.ts` + `headers.ts`）：调用 `/v1/*` 时 `withHarnessHeaders()` 在 `wellness` 模式下自动附带 `Authorization: Bearer` 或 `X-Anon-ID`。
+**关怀模式**（`/v1/*`）：见 `lib/harness/auth.ts`、`headers.ts`。
 
-> 若系统环境变量 `NODE_ENV=windows`，请在终端先执行 `$env:NODE_ENV="development"`，或使用 VS Code 调试配置「Frontend: 开发服务器」。
+## 构建
+
+```bash
+yarn build
+```
+
+Scaffold 期为兼容上游 NextChat 代码，构建时暂时忽略部分 ESLint/TS 检查（见 `next.config.mjs`）。
 
 ## 文档
 
-- 架构：[`docs/adr/0001-frontend-backend-split.md`](../docs/adr/0001-frontend-backend-split.md)
-- 迁移清单：[`MIGRATION.md`](./MIGRATION.md)
+- 术语：`CONTEXT.md`（Frontend Scaffold）
+- 迁移：`MIGRATION.md`
+- ADR：`docs/adr/0001-frontend-backend-split.md`（部分范围已收窄）

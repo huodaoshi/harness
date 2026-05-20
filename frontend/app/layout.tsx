@@ -1,18 +1,48 @@
-import type { Metadata } from "next";
-import "./globals.scss";
+import "./styles/globals.scss";
+import "./styles/markdown.scss";
+import "./styles/highlight.scss";
+import { getClientConfig } from "./config/client";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "Harness Chat",
-  description: "Harness 聊天前端（NextChat 迁移）",
+  description: "Harness 聊天前端",
+  appleWebApp: {
+    title: "Harness Chat",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fafafa" },
+    { media: "(prefers-color-scheme: dark)", color: "#151515" },
+  ],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="zh-CN">
+      <head>
+        <meta name="config" content={JSON.stringify(getClientConfig())} />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <link
+          rel="manifest"
+          href="/site.webmanifest"
+          crossOrigin="use-credentials"
+        />
+        <script src="/serviceWorkerRegister.js" defer></script>
+      </head>
       <body>{children}</body>
     </html>
   );

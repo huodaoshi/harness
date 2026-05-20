@@ -10,11 +10,8 @@
       "cwd": "${workspaceFolder}/backend",
       "console": "integratedTerminal",
       "showLog": true,
-      "envFile": "${workspaceFolder}/backend/.env",
       "env": {
-        "USE_MEMORY_STORE": "true",
-        "LLM_PROVIDER": "ark",
-        "HTTP_ADDR": ":8080"
+        "APP_ENV": "local"
       }
     },
     {

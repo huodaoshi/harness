@@ -24,6 +24,8 @@ type Config struct {
 	MQ               MQConfig
 	COS              COSConfig
 	KnowledgeIndexing KnowledgeIndexingConfig `yaml:"knowledge_indexing"`
+	Wellness         WellnessConfig           `yaml:"wellness"`
+	NextChat         NextChatConfig           `yaml:"nextchat"`
 }
 
 // RateLimitConfig holds HTTP rate limit settings.
@@ -108,11 +110,27 @@ type LogConfig struct {
 	Format string `yaml:"format"`
 }
 
-// LLMConfig holds LLM provider settings for wellness ChatModelGateway.
+// LLMConfig holds LLM provider settings for wellness ChatModelGateway and Ark proxy.
 type LLMConfig struct {
-	Provider string
-	Model    string `yaml:"model"`
-	APIKey   string `yaml:"api_key"`
+	Provider           string
+	Model              string `yaml:"model"`
+	APIKey             string `yaml:"api_key"`
+	BaseURL            string `yaml:"base_url"`
+	RequestTimeout     string `yaml:"request_timeout"`
+	FirstTokenTargetMS int    `yaml:"first_token_target_ms"`
+	FailoverProvider   string `yaml:"failover_provider"`
+}
+
+// WellnessConfig holds wellness runtime toggles.
+type WellnessConfig struct {
+	UseMemoryStore bool `yaml:"use_memory_store"`
+}
+
+// NextChatConfig holds NextChat-compatible /api/config and proxy options.
+type NextChatConfig struct {
+	AccessCodes  []string `yaml:"access_codes"`
+	CustomModels string   `yaml:"custom_models"`
+	DefaultModel string   `yaml:"default_model"`
 }
 
 // MongoDBConfig holds MongoDB connection settings.
@@ -130,8 +148,9 @@ type RedisConfig struct {
 }
 
 const (
-	appConfigBase    = "config/app/config.yaml"
-	appConfigPattern = "config/app/%s.yaml"
+	appConfigBase       = "config/app/config.yaml"
+	appConfigPattern    = "config/app/%s.yaml"
+	appSecretsPattern   = "config/app/%s.secrets.yaml"
 )
 
 // Load reads config/app/config.yaml and overlays config/app/{APP_ENV}.yaml (default APP_ENV=local).
@@ -164,6 +183,17 @@ func Load() (*Config, error) {
 		mergeConfig(cfg, overlay)
 	} else if !errors.Is(oErr, os.ErrNotExist) {
 		return nil, fmt.Errorf("conf: read %s: %w", overlayPath, oErr)
+	}
+
+	secretsPath := fmt.Sprintf(appSecretsPattern, env)
+	if secretsData, sErr := readYAML(secretsPath); sErr == nil {
+		secrets := &Config{}
+		if err = yaml.Unmarshal(secretsData, secrets); err != nil {
+			return nil, fmt.Errorf("conf: parse %s: %w", secretsPath, err)
+		}
+		mergeConfig(cfg, secrets)
+	} else if !errors.Is(sErr, os.ErrNotExist) {
+		return nil, fmt.Errorf("conf: read %s: %w", secretsPath, sErr)
 	}
 
 	if err := applyConnectionEnv(cfg); err != nil {
@@ -211,6 +241,26 @@ func mergeConfig(base, overlay *Config) {
 	mergeMQ(&base.MQ, &overlay.MQ)
 	mergeCOS(&base.COS, &overlay.COS)
 	mergeKnowledgeIndexing(&base.KnowledgeIndexing, &overlay.KnowledgeIndexing)
+	mergeWellness(&base.Wellness, &overlay.Wellness)
+	mergeNextChat(&base.NextChat, &overlay.NextChat)
+}
+
+func mergeWellness(base, overlay *WellnessConfig) {
+	if overlay.UseMemoryStore {
+		base.UseMemoryStore = true
+	}
+}
+
+func mergeNextChat(base, overlay *NextChatConfig) {
+	if len(overlay.AccessCodes) > 0 {
+		base.AccessCodes = overlay.AccessCodes
+	}
+	if overlay.CustomModels != "" {
+		base.CustomModels = overlay.CustomModels
+	}
+	if overlay.DefaultModel != "" {
+		base.DefaultModel = overlay.DefaultModel
+	}
 }
 
 func mergeEmbedding(base, overlay *EmbeddingConfig) {
@@ -348,6 +398,18 @@ func mergeLLM(base, overlay *LLMConfig) {
 	}
 	if overlay.APIKey != "" {
 		base.APIKey = overlay.APIKey
+	}
+	if overlay.BaseURL != "" {
+		base.BaseURL = overlay.BaseURL
+	}
+	if overlay.RequestTimeout != "" {
+		base.RequestTimeout = overlay.RequestTimeout
+	}
+	if overlay.FirstTokenTargetMS > 0 {
+		base.FirstTokenTargetMS = overlay.FirstTokenTargetMS
+	}
+	if overlay.FailoverProvider != "" {
+		base.FailoverProvider = overlay.FailoverProvider
 	}
 }
 

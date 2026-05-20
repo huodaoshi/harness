@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cloudwego/eino/compose"
+	"github.com/huodaoshi/harness/backend/conf"
 	"github.com/huodaoshi/harness/backend/modules/wellness/domain"
 	"github.com/huodaoshi/harness/backend/modules/wellness/infra/chatmodel"
 	"github.com/huodaoshi/harness/backend/modules/wellness/infra/safety"
@@ -23,18 +24,18 @@ type Executor struct {
 	Store     domain.Store
 }
 
-// NewExecutor builds the full graph with store from environment.
-func NewExecutor(ctx context.Context) (*Executor, error) {
-	st, err := store.NewFromEnv(ctx)
+// NewExecutor builds the full graph from application config.
+func NewExecutor(ctx context.Context, app *conf.Config) (*Executor, error) {
+	st, err := store.NewFromConfig(ctx, app)
 	if err != nil {
 		return nil, fmt.Errorf("store: %w", err)
 	}
-	return NewExecutorWithStore(ctx, st)
+	return NewExecutorWithStore(ctx, app, st)
 }
 
-// NewExecutorWithStore is for tests and explicit wiring (uses LLM_PROVIDER / fake default).
-func NewExecutorWithStore(ctx context.Context, st domain.Store) (*Executor, error) {
-	gw, cfg, err := chatmodel.NewGatewayFromEnv(ctx)
+// NewExecutorWithStore is for tests and explicit wiring.
+func NewExecutorWithStore(ctx context.Context, app *conf.Config, st domain.Store) (*Executor, error) {
+	gw, cfg, err := chatmodel.NewGatewayFromConfig(ctx, app)
 	if err != nil {
 		return nil, fmt.Errorf("gateway: %w", err)
 	}

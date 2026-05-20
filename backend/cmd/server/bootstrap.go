@@ -33,8 +33,8 @@ func loadConfigAndInfra(ctx context.Context) (*infraBundle, error) {
 	}
 	b.MongoClient = client
 	log.Printf("mongodb ok (db=%s)", cfg.MongoDB.Database)
-	if os.Getenv("USE_MEMORY_STORE") == "true" {
-		log.Printf("wellness store: in-memory (USE_MEMORY_STORE=true)")
+	if cfg.Wellness.UseMemoryStore {
+		log.Printf("wellness store: in-memory (wellness.use_memory_store)")
 	}
 
 	if cfg.Redis.Required {

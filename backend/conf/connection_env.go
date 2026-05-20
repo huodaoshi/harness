@@ -57,6 +57,27 @@ func applyConnectionEnv(cfg *Config) error {
 	} else if v := strings.TrimSpace(os.Getenv("LLM_MODEL_ID")); v != "" {
 		cfg.LLM.Model = v
 	}
+	if v := strings.TrimSpace(os.Getenv("ARK_BASE_URL")); v != "" {
+		cfg.LLM.BaseURL = v
+	}
+	if v := strings.TrimSpace(os.Getenv("LLM_REQUEST_TIMEOUT")); v != "" {
+		cfg.LLM.RequestTimeout = v
+	}
+	if v := strings.TrimSpace(os.Getenv("LLM_FAILOVER_PROVIDER")); v != "" {
+		cfg.LLM.FailoverProvider = v
+	}
+	if v := strings.TrimSpace(os.Getenv("CUSTOM_MODELS")); v != "" {
+		cfg.NextChat.CustomModels = v
+	}
+	if v := strings.TrimSpace(os.Getenv("DEFAULT_MODEL")); v != "" {
+		cfg.NextChat.DefaultModel = v
+	}
+	if raw := strings.TrimSpace(os.Getenv("CODE")); raw != "" {
+		cfg.NextChat.AccessCodes = splitComma(raw)
+	}
+	if os.Getenv("USE_MEMORY_STORE") == "true" {
+		cfg.Wellness.UseMemoryStore = true
+	}
 	cfg.JWT.Secret = strings.TrimSpace(os.ExpandEnv(cfg.JWT.Secret))
 	if v := strings.TrimSpace(os.Getenv("JWT_SECRET")); v != "" {
 		cfg.JWT.Secret = v
@@ -69,6 +90,17 @@ func applyConnectionEnv(cfg *Config) error {
 		cfg.AdminStaticLogin.Password = v
 	}
 	return nil
+}
+
+func splitComma(raw string) []string {
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }
 
 func getenvDefault(key, def string) string {

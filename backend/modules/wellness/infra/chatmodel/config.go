@@ -7,9 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/huodaoshi/harness/backend/conf"
 )
 
-// Config holds LLM gateway settings from environment (never commit secrets).
+// Config holds LLM gateway settings (from conf + optional env overrides).
 type Config struct {
 	Provider           string
 	FailoverProvider   string
@@ -20,7 +22,47 @@ type Config struct {
 	FirstTokenTargetMS int
 }
 
+// ConfigFromApp maps application config to gateway settings.
+func ConfigFromApp(c *conf.Config) Config {
+	timeout := 90 * time.Second
+	if v := strings.TrimSpace(c.LLM.RequestTimeout); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			timeout = d
+		}
+	}
+	targetMS := 3000
+	if c.LLM.FirstTokenTargetMS > 0 {
+		targetMS = c.LLM.FirstTokenTargetMS
+	}
+	provider := strings.ToLower(strings.TrimSpace(c.LLM.Provider))
+	if provider == "" {
+		if strings.TrimSpace(c.LLM.APIKey) != "" && strings.TrimSpace(c.LLM.Model) != "" {
+			provider = "ark"
+		} else {
+			provider = "fake"
+		}
+	}
+	return Config{
+		Provider:           provider,
+		FailoverProvider:   strings.TrimSpace(c.LLM.FailoverProvider),
+		ARKAPIKey:          strings.TrimSpace(c.LLM.APIKey),
+		ARKModel:           strings.TrimSpace(c.LLM.Model),
+		ARKBaseURL:         strings.TrimSpace(c.LLM.BaseURL),
+		RequestTimeout:     timeout,
+		FirstTokenTargetMS: targetMS,
+	}
+}
+
+// LoadConfigFromEnv builds config from conf.Load() or process environment (tests).
 func LoadConfigFromEnv() Config {
+	c, err := conf.Load()
+	if err != nil {
+		return legacyEnvConfig()
+	}
+	return ConfigFromApp(c)
+}
+
+func legacyEnvConfig() Config {
 	timeout := 90 * time.Second
 	if v := os.Getenv("LLM_REQUEST_TIMEOUT"); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
@@ -55,15 +97,15 @@ func LoadConfigFromEnv() Config {
 func firstNonEmpty(vals ...string) string {
 	for _, v := range vals {
 		if strings.TrimSpace(v) != "" {
-			return v
+			return strings.TrimSpace(v)
 		}
 	}
 	return ""
 }
 
-// NewGatewayFromEnv builds primary (+ optional failover) gateway.
-func NewGatewayFromEnv(ctx context.Context) (Gateway, Config, error) {
-	cfg := LoadConfigFromEnv()
+// NewGatewayFromConfig builds primary (+ optional failover) gateway.
+func NewGatewayFromConfig(ctx context.Context, app *conf.Config) (Gateway, Config, error) {
+	cfg := ConfigFromApp(app)
 	primary, err := newProvider(ctx, cfg, cfg.Provider)
 	if err != nil {
 		return nil, cfg, err
@@ -84,6 +126,20 @@ func NewGatewayFromEnv(ctx context.Context) (Gateway, Config, error) {
 		secondary: secondary,
 		secrets:   []string{cfg.ARKAPIKey},
 	}, cfg, nil
+}
+
+// NewGatewayFromEnv builds gateway using conf.Load() when cwd is backend/; else process env only.
+func NewGatewayFromEnv(ctx context.Context) (Gateway, Config, error) {
+	c, err := conf.Load()
+	if err != nil {
+		cfg := legacyEnvConfig()
+		primary, pErr := newProvider(ctx, cfg, cfg.Provider)
+		if pErr != nil {
+			return nil, cfg, pErr
+		}
+		return primary, cfg, nil
+	}
+	return NewGatewayFromConfig(ctx, c)
 }
 
 func newProvider(ctx context.Context, cfg Config, name string) (Gateway, error) {

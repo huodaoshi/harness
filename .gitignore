@@ -11,11 +11,13 @@ cli/*.log
 Thumbs.db
 .idea/
 
-# Env
+# Env（backend 不用 .env；见 config/app/README.md）
 .env
 .env.*
 !.env.example
 !**/.env.example
+backend/config/app/*.secrets.yaml
+!backend/config/app/*.secrets.yaml.example
 
 # Local scratch work (issue tracker output; uncomment if you don't want to commit)
 # .scratch/

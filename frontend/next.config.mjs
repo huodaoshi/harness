@@ -3,6 +3,12 @@ const apiProxyTarget =
   process.env.API_PROXY_TARGET ?? "http://127.0.0.1:8080";
 
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

@@ -1,5 +1,7 @@
 # ADR-0001：NextChat 能力迁移与前后端分离
 
+> **2026-05-20 补充**：**Frontend Scaffold** 已收窄为托管单模型 Web 壳 + 临时 `/api/bytedance`；多厂商 `/api/*`、Scaffold 期 SafetyGate on `/api` 不在当前范围。以 `CONTEXT.md` 与 `.scratch/frontend-scaffold/` 为准。
+
 - **状态**：已接受
 - **日期**：2026-05-19
 - **决策者**：产品与工程（grill-me 共识）
