@@ -1,0 +1,24 @@
+{
+    "hooks": {
+        "SessionStart": [
+            {
+                "matcher": "startup|clear|compact",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash \"${CLAUDE_PROJECT_DIR}/.claude/hooks/run-hook.cmd\" session-start",
+                        "async": false
+                    }
+                ]
+            }
+        ]
+    },
+    "permissions": {
+        "allow": [
+            "Bash(pnpm --dir cli exec vitest run)",
+            "Bash(pnpm --dir cli run type-check)",
+            "Bash(pnpm run *)",
+            "Bash(pnpm exec *)"
+        ]
+    }
+}

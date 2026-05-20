@@ -7,7 +7,7 @@ domains:
     type: shared
     lang: typescript
     path: ./
-    description: Agent harness 骨架——skills CLI、规则/技能规范源、.agents 技能真源与文档
+    description: Agent 工作流骨架——skills CLI、规则/技能规范源、.agents 技能真源与项目知识库
     skills:
       - .harness/knowledge/domains/shared/01-architecture.md
       - .harness/knowledge/domains/shared/02-business-domains.md

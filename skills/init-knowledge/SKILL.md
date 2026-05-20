@@ -1,21 +1,23 @@
 ---
 name: init-knowledge
-description: "在目标 git 仓库初始化或更新项目知识库：写入 .harness/knowledge/index.yaml 与 domain 文档等；可选双写 Cursor/Claude 规则与 CLAUDE.md。在 Cursor 中加载本技能后执行。"
+description: "在目标 git 仓库初始化或更新项目知识库：写入 .harness/knowledge/index.yaml 与 domain 文档等；默认下发 Cursor/Claude sessionStart hook 与 session-bootstrap；可选双写规则与 CLAUDE.md。在 Cursor 中加载本技能后执行。"
 ---
 
 # Init Knowledge — 项目知识库初始化
 
-把消费端 **`$TARGET`** 的项目知识库初始化到 **`.harness/knowledge/`**（索引 + domain 文档 + 按域查询说明），并可选写入 **`.claude/` / `.cursor/`** 规则与 **`CLAUDE.md`**。
+把消费端 **`$TARGET`** 的项目知识库初始化到 **`.harness/knowledge/`**（索引 + domain 文档 + 按域查询说明），**默认**写入 **sessionStart hook**（`.cursor/hooks*`、`.claude/hooks*`、`.harness/session/session-bootstrap.md`），并可选写入 **`.claude/` / `.cursor/`** 语言规则与 **`CLAUDE.md`**。
 
 ## 参数
 
 | 参数 | 行为 |
 |---|---|
 | `<目标仓库绝对路径>`（可选位置参数） | 指定要扫描和写入的目标仓库；不传则用当前 `pwd` |
-| 无参数 | 完整 init：跑 A+B+C，已存在文件保留（按需合并） |
-| `--full` | 强制完全重跑 A+B+C，覆盖现有文件（用户负责 git diff 比对） |
-| `--domain <name>` | 仅对指定 domain 跑 **B+C**（该 domain 的深度学习 + 生成其 query 说明等） |
-| `--commands` | 仅跑 A4+C4（重新推断验证命令并扩充 settings.json） |
+| 无参数 | 完整 init：跑 A+B+C+D（**D 为 hook**，默认开启），已存在文件保留（按需合并） |
+| `--full` | 强制完全重跑 A+B+C+D（**含 D**；hook 脚本覆盖，settings/hooks.json 仍按合并规则） |
+| `--domain <name>` | 仅对指定 domain 跑 **B+C**（该 domain 的深度学习 + 生成其 query 说明等）；**不跑 D** |
+| `--commands` | 仅跑 A4+C4（重新推断验证命令并扩充 `permissions.allow`）；**不跑 D** |
+| `--hooks` | 仅跑 **D**（重装 sessionStart hook 与 `.harness/session/session-bootstrap.md`） |
+| `--no-hooks` | 完整 init 时**跳过 D**（其余阶段不变） |
 
 ## 目标路径解析（$TARGET）
 
@@ -48,9 +50,11 @@ description: "在目标 git 仓库初始化或更新项目知识库：写入 .ha
 | Claude 语言规则源 | `rules/claude/_lang/<lang>.md`（优先）；否则 `.claude/rules/_lang/<lang>.md` |
 | learner-workflow（维护真源） | `.harness/knowledge/learner-workflow.md` |
 | learner-workflow（随技能安装） | `.agents/skills/init-knowledge/resources/learner-workflow.md` |
+| session-bootstrap（随技能安装） | `.agents/skills/init-knowledge/resources/session/session-bootstrap.md` |
+| sessionStart hook 包（随技能安装） | `.agents/skills/init-knowledge/resources/hooks/`（优先）；回退 `$HARNESS_ROOT/.cursor/hooks/`、`.claude/hooks/` |
 
 从 harness 根对 **`$TARGET` 绝对路径`** 初始化消费端仓库时：业务路径写 `$TARGET`，模板读 `$HARNESS_ROOT`。  
-**其它项目**只 `skills add` 了本技能时：无 `$HARNESS_ROOT` 也能靠 **resources/** 下发 workflow（见 A0）。
+**其它项目**只 `skills add` 了本技能时：无 `$HARNESS_ROOT` 也能靠 **resources/** 下发 workflow（见 A0）与 hook（见 D）。
 
 ### 维护者：改 workflow 后同步两处
 
@@ -58,9 +62,15 @@ description: "在目标 git 仓库初始化或更新项目知识库：写入 .ha
 2. 复制到 **`.agents/skills/init-knowledge/resources/learner-workflow.md`**（随 `skills add` 分发）
 3. 已 init 过的消费端：可删其 `.harness/knowledge/learner-workflow.md` 后重跑 A0，或手动覆盖
 
+### 维护者：改 hook / session 后同步 resources
+
+1. 编辑 harness 真源：**`.harness/session/session-bootstrap.md`**、**`.cursor/hooks/*`**、**`.claude/hooks/*`**
+2. 同步到 **`.agents/skills/init-knowledge/resources/`**（`session/session-bootstrap.md`、`hooks/cursor/`、`hooks/claude/`）
+3. 已 init 过的消费端：在目标仓重跑 **`init-knowledge --hooks`**（或 `--full`）
+
 ## 进度追踪
 
-使用 **TodoWrite** 为「阶段 A / B / C」及各 domain 创建待办，随阶段更新勾选状态。
+使用 **TodoWrite** 为「阶段 A / B / C / D」及各 domain 创建待办，随阶段更新勾选状态（`--hooks` 仅 D；`--commands` 无 D）。
 
 ## 代理注意（Cursor）
 
@@ -317,11 +327,90 @@ domain type: <type>
 
 若 **`$TARGET/.claude/settings.json`** 不存在：可创建仅含 `permissions` 骨架的最小文件，或**跳过** C4（纯 Cursor 消费端无 `.claude/` 时跳过）。若文件存在，将 A4 推断到的命令前缀（如 `make *`、`go vet *`、`go test *`、`pnpm run *`、`cargo *`）追加到 `permissions.allow` 列表（去重）。
 
-**不动 `permissions.deny`、`hooks` 字段**。
+**不动 `permissions.deny`**；**`hooks` 字段由 D 合并**（C4 仅处理 `permissions.allow`）。
 
 如果 `permissions.allow` 中已存在某条目，跳过不重复添加。
 
-### C5. 输出最终报告
+将「阶段 C」对应待办标记为完成。
+
+---
+
+## 阶段 D：下发 sessionStart hook（默认开启）
+
+**何时执行：**
+
+- 完整 init（无 `--no-hooks`、无 `--domain`、无 `--commands`）→ **必须执行**
+- 仅 `--hooks` → **只执行本阶段**（仍须先解析 `$TARGET`）
+- `--no-hooks`、`--domain`、`--commands` → **跳过**
+
+**源路径解析**（相对 `$HARNESS_ROOT` 或已安装的 init-knowledge 技能包；**禁止**从 `$TARGET` 读模板）：
+
+| 用途 | 优先级 1 | 优先级 2（harness 根 init 时） |
+|------|----------|--------------------------------|
+| `session-bootstrap.md` | `resources/session/session-bootstrap.md` | `.harness/session/session-bootstrap.md` |
+| Cursor `hooks.json`、脚本 | `resources/hooks/cursor/` | `.cursor/hooks/` + 根 `.cursor/hooks.json` |
+| Claude 脚本 | `resources/hooks/claude/` | `.claude/hooks/` |
+| Claude `hooks` 片段 | `resources/hooks/claude/settings-hooks.fragment.json` | 从 `$HARNESS_ROOT/.claude/settings.json` 提取 `hooks` 对象 |
+
+技能包 resources 与 HARNESS_ROOT 回退皆不可用 → 报错退出，提示设置 **HARNESS_ROOT** 或 `skills add` **init-knowledge**。
+
+### D1. 写入 session-bootstrap
+
+- 目标：**`$TARGET/.harness/session/session-bootstrap.md`**
+- 父目录不存在则创建
+- 已存在且非 `--full` → **跳过**（报告 `skipped`）
+- `--full` 或 `--hooks` 且源更新 → **覆盖**
+
+### D2. Cursor hook
+
+| 源 | 目标 |
+|----|------|
+| `hooks/cursor/hooks.json` | `$TARGET/.cursor/hooks.json` |
+| `hooks/cursor/run-hook.cmd` | `$TARGET/.cursor/hooks/run-hook.cmd` |
+| `hooks/cursor/session-start` | `$TARGET/.cursor/hooks/session-start` |
+
+- **`hooks.json`**：若不存在则写入；若已存在但无 `hooks.sessionStart` 数组 → **合并**该键（保留其它 hook 事件）；若已有 `sessionStart` 且命令指向本仓 `run-hook.cmd session-start` → 跳过；若已有不同 `sessionStart` → 跳过并在报告注明 `conflict-skipped`
+- **脚本**：目标不存在 → 写入；已存在 → 默认跳过；**`--full` 或 `--hooks`** → 覆盖
+
+### D3. Claude hook
+
+| 源 | 目标 |
+|----|------|
+| `hooks/claude/run-hook.cmd` | `$TARGET/.claude/hooks/run-hook.cmd` |
+| `hooks/claude/session-start` | `$TARGET/.claude/hooks/session-start` |
+
+脚本覆盖规则同 D2。
+
+**`$TARGET/.claude/settings.json`：**
+
+1. 读取 **`settings-hooks.fragment.json`**（或 harness 真源中的 `hooks` 对象）
+2. 若 **`settings.json` 不存在**：写入仅含 `hooks` 的 JSON（**不要**在此步写入 `permissions`；若 C4 已写入 `permissions` 则保留）
+3. 若已存在：
+   - 无 `hooks.SessionStart`（或为空）→ **合并** `hooks` 对象（保留 `permissions` 与其它顶层键）
+   - 已有 `SessionStart` 且已注册 `run-hook.cmd session-start` → 跳过
+   - 已有不同 `SessionStart` 配置 → 跳过，报告 `conflict-skipped`
+4. **禁止**删除或覆盖 `permissions.deny`、`permissions.allow`（C4 专责）
+
+纯 Cursor 消费端无 `.claude/` 时：可跳过 D3（报告 `claude-skipped`）。
+
+### D4. 日志
+
+```
+[D] sessionStart hook
+  - .harness/session/session-bootstrap.md: created | updated | skipped
+  - .cursor/hooks.json: created | merged | skipped | conflict-skipped
+  - .cursor/hooks/*: created | updated (N files) | skipped
+  - .claude/hooks/*: ...
+  - .claude/settings.json hooks: merged | skipped | conflict-skipped | claude-skipped
+```
+
+**注意：** Windows 需 **bash**（Git Bash）；无 bash 时 hook **fail-open**，新会话可能无注入——在报告中提示安装 Git for Windows。
+
+阶段 D 完成后，将子待办「阶段 D」标记为完成（若使用 TodoWrite）。
+
+---
+
+## 最终报告（C5）
 
 ```
 [INIT-KNOWLEDGE 完成]
@@ -340,14 +429,19 @@ domain type: <type>
   - .harness/knowledge/domains/<type>/0X-*.md  (共 <4N> 份)
   - .cursor/rules/_lang/*.mdc 与 .claude/rules/_lang/*.md 栈规则（若写入）
   - .claude/settings.json (扩充 permissions.allow，若存在)
+  - .harness/session/session-bootstrap.md（D）
+  - .cursor/hooks.json、.cursor/hooks/*（D）
+  - .claude/hooks/*、.claude/settings.json 的 hooks.SessionStart（D，若适用）
 
 下一步：
   1. 检查 git diff .harness/knowledge/ .cursor/rules/ .claude/ CLAUDE.md 确认生成内容
   2. 必要时手动修正 .harness/knowledge/index.yaml 中错误的域划分
   3. 重跑特定 domain：init-knowledge --domain <name>
-  4. 全部满意后提交（示例）：
-     git add .harness/knowledge .cursor/rules .claude CLAUDE.md
-     git commit -m "docs(knowledge): 初始化项目知识库"
+  4. 仅更新 hook：init-knowledge --hooks
+  5. 新开 Agent 会话验证 sessionStart 是否注入 bootstrap
+  6. 全部满意后提交（示例）：
+     git add .harness/knowledge .harness/session .cursor/rules .claude .cursor/hooks CLAUDE.md
+     git commit -m "docs(knowledge): 初始化项目知识库与 session hooks"
 ```
 
 将「阶段 C」对应待办标记为完成。
@@ -359,7 +453,7 @@ domain type: <type>
 任何阶段失败时：
 - 已完成的产物保留在磁盘
 - 标记当前阶段对应待办为完成（避免卡住），同时在描述中追加 `[FAILED]`
-- 输出错误摘要 + 已完成进度 + 重跑建议（用 `--domain` 重跑特定 domain，或 `--commands` 仅重跑命令推断）
+- 输出错误摘要 + 已完成进度 + 重跑建议（用 `--domain` 重跑特定 domain、`--commands` 仅重跑命令推断、`--hooks` 仅重跑 hook）
 
 ## 重跑语义
 
@@ -369,12 +463,14 @@ domain type: <type>
 | 大改后完全重建 | **init-knowledge** + `--full` |
 | 单个 domain 知识过时 | **init-knowledge** + `--domain <name>` |
 | 项目构建命令变了 | **init-knowledge** + `--commands` |
-| 日常增量学习 | **learn** 技能（不走 init） |
+| harness 升级后同步 hook | **init-knowledge** + `--hooks` |
+| 不要 hook（纯 CI/无 IDE） | **init-knowledge** + `--no-hooks` |
+| 日常增量学习 | **learn** 技能（不走 init；不修改 hook） |
 
 ## 约束
 
-- 读 / 写 **`$TARGET/.harness/knowledge/**`**、**`$TARGET/CLAUDE.md`**（及其备份）；可选读 / 写 **`$TARGET/.claude/settings.json`**、**`$TARGET/.claude/rules/lang/**`**、**`$TARGET/.cursor/rules/lang/**`**
-- 只读 **`$HARNESS_ROOT`** 下模板与规则源（见「Harness 根目录」表）；可写 **`$TARGET/.harness/knowledge/learner-workflow.md`**（A0 复制）
+- 读 / 写 **`$TARGET/.harness/knowledge/**`**、**`$TARGET/.harness/session/**`**、**`$TARGET/CLAUDE.md`**（及其备份）；可选读 / 写 **`$TARGET/.claude/settings.json`**（C4：`permissions.allow`；D：合并 `hooks`）、**`$TARGET/.claude/hooks/**`**、**`$TARGET/.cursor/hooks.json`**、**`$TARGET/.cursor/hooks/**`**、**`$TARGET/.claude/rules/_lang/**`**、**`$TARGET/.cursor/rules/_lang/**`**
+- 只读 **`$HARNESS_ROOT`** 下模板、规则源与 **resources/hooks**（见「Harness 根目录」表）；可写 **`$TARGET/.harness/knowledge/learner-workflow.md`**（A0 复制）
 - 不修改 `$TARGET` 的业务源代码
 - 不修改 `$TARGET/.git/`
 - 不删除已有 **`$TARGET/.harness/knowledge/`** 下文件（除 `--full` 模式且用户已确认覆盖策略）

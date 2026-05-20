@@ -147,8 +147,8 @@
 
 - **不修改** `.harness/knowledge/query/*.md`（按域查询说明由 init-knowledge 维护）
 - **不修改** `.harness/knowledge/index.yaml`、`.harness/knowledge/learner-workflow.md`、`.harness/knowledge/init-detection.json`（索引与框架文件由 init 维护）
-- **不修改** `.claude/hooks/*`（钩子脚本）
-- **不修改** `.claude/settings*.json`（配置文件）
+- **不修改** `.cursor/hooks/*`、`.claude/hooks/*`、`.cursor/hooks.json`（由 **init-knowledge** D 维护；**learn** 不修改）
+- **不修改** `.harness/session/*`、`.claude/settings*.json`（`session-bootstrap` / `permissions` / `hooks` 由 **init-knowledge** D/C4 维护）
 - **不删除**任何现有知识内容（除非内容明确描述了一个已被删除的文件 / 功能）
 - 如果不确定某个变更是否值得记录，**不记录**
 - 只记录**结构性、可复用的模式**，不记录一次性的业务逻辑细节
@@ -284,7 +284,7 @@
 ## 跨模式通用约束
 
 - 不修改业务代码
-- 不修改 **`.harness/knowledge/index.yaml`**、**`.harness/knowledge/learner-workflow.md`**、**`.harness/knowledge/init-detection.json`**、**`.harness/knowledge/query/*.md`**、**`.claude/hooks/`**、**`.claude/settings.json`**
+- 不修改 **`.harness/knowledge/index.yaml`**、**`.harness/knowledge/learner-workflow.md`**、**`.harness/knowledge/init-detection.json`**、**`.harness/knowledge/query/*.md`**、**`.harness/session/`**、**`.cursor/hooks/`**、**`.claude/hooks/`**、**`.cursor/hooks.json`**、**`.claude/settings.json`**
 - 不执行 `git add` / `git commit` / `git push`（仅在报告中以纯文本形式给出建议命令，由用户手动执行）
 - 调用 Bash 工具时，git 子命令必须**单条执行**（如 `git log ...`、`git diff ...`），不要拼成多语句脚本，以保持与 settings.json 中 `Bash(git log *)` / `Bash(git diff *)` 等前缀允许规则匹配
 - 数字、清单、文件路径必须基于实际扫描，不依赖已有数字做增量

@@ -11,12 +11,12 @@
 
 1. 在 **`.agents/skills/<name>/SKILL.md`** 撰写（简体中文，本仓维护）
 2. 可选：同步副本到 **`skills/<name>/`** 供 `skills add` 分发
-3. 大改流程时更新 **`init-knowledge` / `learn`** 相关说明
+3. 大改流程时更新 **init-knowledge** / **learn** 相关说明
 
 ## 修改编辑器规则
 
 1. 只改 **`rules/cursor/`** 或 **`rules/claude/`**
-2. 需要 IDE 生效时：`pnpm --dir cli dev rules add . -a cursor|claude-code`
+2. 需要 IDE 生效时：`pnpm --dir cli dev rules add . -a cursor`
 3. 保持 `.cursor` 与 `.claude` 镜像一致（团队约定）
 
 ## 验证命令（本 domain）
@@ -26,13 +26,14 @@ pnpm --dir cli exec vitest run
 pnpm --dir cli run type-check
 ```
 
-## 知识库维护
+## 知识库与 session 维护
 
 | 操作 | 方式 |
 |------|------|
-| 首次/重建知识库 | Cursor 加载 **init-knowledge** 技能 |
-| 开发后增量 | **learn** 技能（依赖 `index.yaml` + `learner-workflow.md`） |
-| 改学习规程 | 编辑 `.harness/knowledge/learner-workflow.md`，并复制到 `.agents/skills/init-knowledge/resources/` |
+| 首次/重建知识库 | **init-knowledge**（A+B+C+D，D 默认下发 hook） |
+| 开发后增量 | **learn**（依赖 `index.yaml` + `learner-workflow.md`） |
+| 改学习规程 | 编辑 `.harness/knowledge/learner-workflow.md` → 复制到 `init-knowledge/resources/` |
+| 改 session / hook | 编辑 `.harness/session/`、`.cursor/hooks/` → 同步 `resources/` → `init-knowledge --hooks` |
 
 ## 错误处理约定
 
@@ -48,9 +49,6 @@ pnpm --dir cli run type-check
 
 ```powershell
 cd D:\harness
-pnpm --dir cli dev --help
 pnpm --dir cli dev add . --list
 pnpm --dir cli dev rules add . -a cursor
 ```
-
-安装到其它项目时在**目标项目根**执行，并注意 `--cwd`（见 `rules/README.md`、`skills/README.md`）。

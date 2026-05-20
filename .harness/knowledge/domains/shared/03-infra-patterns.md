@@ -1,44 +1,33 @@
-# harness — 基础设施与横切模式
+# harness — 基础设施模式
 
-## 锁文件与安装目标
+## 路径与安装约定
 
-| 文件 | 位置 | 用途 |
-|------|------|------|
-| `skills-lock.json` | 消费端项目根（全局 lock 在 XDG/`~/.agents`） | 技能版本与来源追踪 |
-| `rules-lock.json` | 消费端项目根 | 规则包恢复（`skills rules experimental_install`） |
-| `skills-lock.json`（本仓根） | harness 根 | 本仓 CLI 开发时产生的 lock（若存在） |
+| 模式 | 说明 |
+|------|------|
+| 消费端项目根 | `rules add` / `add` 用 `INIT_CWD` 或 `--cwd`，避免装到 `cli/` 目录 |
+| Agent 目录 | `agents.ts` 定义 Cursor、Claude、Codex 等目标路径 |
+| 锁文件 | 项目根 `skills-lock.json`、`rules-lock.json`；全局 `~/.agents/.skill-lock.json` |
+| 规则双写 | 规范源 `rules/`，bootstrap 到 `.cursor/rules`、`.claude/rules` |
 
-## 项目根解析（CLI）
+## sessionStart hook（阶段 D）
 
-`cli/src/project-root.ts`：`resolveCliProjectRoot()`  
-顺序：**`--cwd`** → **`INIT_CWD`** → **`process.cwd()`**。  
-用于 `skills add`、`skills rules add`、`experimental_install`、`experimental_sync`。
+| 路径 | 说明 |
+|------|------|
+| `.harness/session/session-bootstrap.md` | 新会话注入文案 |
+| `.cursor/hooks.json` + `.cursor/hooks/*` | Cursor sessionStart |
+| `.claude/hooks/*` + `settings.json` 的 `hooks` | Claude Code SessionStart |
+| 模板 | `.agents/skills/init-knowledge/resources/session/`、`resources/hooks/` |
 
-## Agent 目录约定
+Windows 依赖 **Git Bash**；无 bash 时 hook fail-open。
 
-- 通用技能目录：`.agents/skills/`（多数 universal agent）
-- Cursor：`.cursor/rules/`（`*.mdc`）
-- Claude Code：`.claude/rules/`（`*.md`）
-- 定义表：`cli/src/agents.ts`（50+ agent 的 skillsDir / globalSkillsDir）
+## 外部依赖
 
-## 规则双写与规范源
+- **Git**：克隆技能包（`git.ts`）
+- **GitHub API**：`blob.ts` 拉取 tree（可选 `GITHUB_TOKEN`）
+- **网络**：安装远程包时需要；init-knowledge/learn 本身不联网
 
-- **编辑源头：** `rules/cursor/`、`rules/claude/`
-- **IDE 使用：** `.cursor/rules/`、`.claude/rules/`（bootstrap 后可用 `rules add .` 再同步）
-- **语言规则：** `_lang/*.mdc` / `_lang/*.md`，frontmatter `paths` 控制生效范围
+## 文档与 ADR
 
-## 文档与语言
-
-- 人类文档默认**简体中文**（`.cursor/rules/docs-zh.mdc`）
-- Windows 终端：PowerShell 5.x 避免 `&&`（`windows-shell.mdc`）
-- Git：默认分支 `master`，feature 分支命名见 `git.mdc`
-
-## 测试与质量
-
-- 测试目录：`cli/tests/`（vitest）
-- 类型检查：`pnpm --dir cli run type-check`
-- 格式化：Prettier（`cli/.prettierrc`，tabWidth 4）
-
-## 无服务端组件
-
-本仓**无**数据库、消息队列、HTTP API 服务；CLI 为本地 Node 进程，Git 与网络仅用于 clone/遥测。
+- `docs/cli-rules.md` — CLI 规则安装约定
+- `docs/adr/0001-skills-cli-rules-install.md` — 结构决策
+- `docs/agents/knowledge.md` — 知识库维护说明

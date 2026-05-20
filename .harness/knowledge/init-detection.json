@@ -1,5 +1,5 @@
 {
-  "detected_at": "2026-05-20T00:00:00+08:00",
+  "detected_at": "2026-05-20T18:00:00+08:00",
   "signals": {
     "monorepo_files": [],
     "lang_files": {
@@ -26,6 +26,7 @@
       "evidence": [
         "cli/package.json",
         "cli/src/cli.ts",
+        "cli/src/rules-add.ts",
         "rules/",
         "skills/",
         ".agents/skills/"
