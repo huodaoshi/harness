@@ -9,7 +9,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack(config) {
+  webpack(config, { webpack }) {
     config.module.rules.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],
@@ -18,6 +18,12 @@ const nextConfig = {
       ...config.resolve.fallback,
       child_process: false,
     };
+    // rt-client 的可选 ws 原生依赖，浏览器端不需要
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^(bufferutil|utf-8-validate)$/,
+      }),
+    );
     return config;
   },
   async rewrites() {

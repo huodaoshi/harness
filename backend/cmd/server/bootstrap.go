@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/redis/go-redis/v9"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/huodaoshi/harness/backend/conf"
 	"github.com/huodaoshi/harness/backend/infra"
+	"github.com/huodaoshi/harness/backend/infra/logging"
 )
 
 type infraBundle struct {
@@ -24,6 +25,7 @@ func loadConfigAndInfra(ctx context.Context) (*infraBundle, error) {
 	if err != nil {
 		return nil, err
 	}
+	logging.Setup(cfg.Log)
 
 	b := &infraBundle{Cfg: cfg}
 
@@ -32,9 +34,9 @@ func loadConfigAndInfra(ctx context.Context) (*infraBundle, error) {
 		return nil, fmt.Errorf("mongodb: %w", err)
 	}
 	b.MongoClient = client
-	log.Printf("mongodb ok (db=%s)", cfg.MongoDB.Database)
+	slog.Info("mongodb ok", "db", cfg.MongoDB.Database)
 	if cfg.Wellness.UseMemoryStore {
-		log.Printf("wellness store: in-memory (wellness.use_memory_store)")
+		slog.Info("wellness store: in-memory", "wellness.use_memory_store", true)
 	}
 
 	if cfg.Redis.Required {
@@ -43,7 +45,7 @@ func loadConfigAndInfra(ctx context.Context) (*infraBundle, error) {
 			return nil, fmt.Errorf("redis: %w", err)
 		}
 		b.RedisClient = rclient
-		log.Printf("redis ok (addrs=%v)", cfg.Redis.Addrs)
+		slog.Info("redis ok", "addrs", cfg.Redis.Addrs)
 	}
 
 	return b, nil

@@ -29,3 +29,8 @@ go run ./cmd/server
 | `USE_MEMORY_STORE` | `true` 时用内存 wellness store |
 | `CODE` | NextChat 访问口令（逗号分隔） |
 | `HTTP_ADDR` | 监听地址，如 `:8080` |
+
+## 日志
+
+`config.yaml` 中 `log.level`（`debug` / `info` / `warn` / `error`）、`log.format`（`text` / `json`）。  
+每条 HTTP 请求会输出访问日志（method、path、status、latency_ms、request_id）；响应头带 `X-Request-Id`。

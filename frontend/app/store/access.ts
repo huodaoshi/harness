@@ -140,8 +140,8 @@ const DEFAULT_ACCESS_STATE = {
   ai302Url: DEFAULT_AI302_URL,
   ai302ApiKey: "",
 
-  // server config
-  needCode: true,
+  // server config（后端 /api/config 返回前默认关闭口令，避免离线时无法进入）
+  needCode: false,
   hideUserApiKey: false,
   hideBalanceQuery: false,
   disableGPT4: false,

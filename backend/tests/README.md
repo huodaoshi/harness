@@ -12,5 +12,6 @@ backend/
 
 - 包名一般为 `<pkg>_test`，通过 import 访问被测包。
 - 在 `backend/` 下执行：`go test ./...`
+- 提交前检查：`go run ./scripts/check_test_placement/`（**禁止**在 `tests/` 以外出现 `*_test.go`）
 
 **不要**在 `conf/`、`modules/`、`api/` 等源码目录旁新建 `*_test.go`。

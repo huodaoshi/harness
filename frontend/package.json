@@ -5,6 +5,7 @@
   "scripts": {
     "mask": "npx tsx app/masks/build.ts",
     "dev": "concurrently -r \"yarn mask\" \"next dev\"",
+    "dev:debug": "next dev",
     "build": "yarn mask && next build",
     "start": "next start",
     "lint": "next lint"

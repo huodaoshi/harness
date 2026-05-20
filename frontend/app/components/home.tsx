@@ -227,8 +227,12 @@ export function useLoadData() {
 
   useEffect(() => {
     (async () => {
-      const models = await api.llm.models();
-      config.mergeModels(models);
+      try {
+        const models = await api.llm.models();
+        config.mergeModels(models);
+      } catch (err) {
+        console.warn("[Models] failed to load models", err);
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -44,7 +44,8 @@ func (h *ProxyHandler) Handle(ctx context.Context, c *app.RequestContext) {
 	}
 	upstream := h.Settings.ARKBaseURL + path
 
-	body, err := io.ReadAll(c.Request.BodyStream())
+	// 普通 JSON POST 的 body 在 Request.Body() 缓冲里；BodyStream() 在无 stream 时返回空 Reader。
+	body, err := c.Body()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
@@ -57,7 +58,11 @@ func (h *ProxyHandler) Handle(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	req.Header.Set("Content-Type", string(c.ContentType()))
+	contentType := string(c.ContentType())
+	if contentType == "" {
+		contentType = "application/json"
+	}
+	req.Header.Set("Content-Type", contentType)
 	if auth := string(c.GetHeader("Authorization")); auth != "" {
 		req.Header.Set("Authorization", auth)
 	}

@@ -8,6 +8,6 @@
 | `naming.md` | `cli/**`, `backend/**`, `**/*.go` | snake_case / camelCase 分层 |
 | `eino.md` | `backend/**/*.go` | Eino 编排；无 `backend/` 时不生效 |
 | `_lang/typescript.md` | `**/*.ts(x)` | CLI 等 TS 代码 |
-| `_lang/go.md` 等 | 各语言 glob | 有对应源码时生效；Go 测试须在 `tests/` 镜像目录，见 go.md「测试」 |
+| `_lang/go.md` 等 | 各语言 glob | 有对应源码时生效；Go 测试**仅**允许 `backend/tests/**`；校验 `go run ./scripts/check_test_placement/` |
 
 **未跟踪时：** 新 rule 需 `git add .cursor/rules/` 后才会进版本库。

@@ -20,7 +20,8 @@ backend/
     domain/                     # Store 接口与模型
     application/                # 会话图、Executor
     infra/{store,safety,chatmodel,configpaths}/
-  tests/                        # 镜像路径的 *_test.go
+  tests/                        # 唯一允许的 *_test.go 位置（镜像源码路径）
+  scripts/check_test_placement/ # 校验：tests/ 外不得有 *_test.go
   conf/          # Go：conf.Load()
   config/        # 静态 YAML（app/ + wellness）
   cmd/server/

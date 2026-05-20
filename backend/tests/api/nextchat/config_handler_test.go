@@ -1,4 +1,4 @@
-package nextchat
+package nextchat_test
 
 import (
 	"encoding/json"
@@ -12,15 +12,19 @@ import (
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 
+	"github.com/huodaoshi/harness/backend/api/nextchat"
 	"github.com/huodaoshi/harness/backend/conf"
 )
 
 func TestConfigHandler_NoCode(t *testing.T) {
-	backendRoot := filepath.Join("..", "..")
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	backendRoot := filepath.Clean(filepath.Join(wd, "..", "..", ".."))
 	if err := os.Chdir(backendRoot); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = os.Chdir(filepath.Join(backendRoot, "api", "nextchat")) })
 
 	t.Setenv("CODE", "")
 	t.Setenv("ARK_API_KEY", "test-key")
@@ -38,7 +42,7 @@ func TestConfigHandler_NoCode(t *testing.T) {
 	t.Cleanup(func() { ln.Close() })
 
 	h := server.New(server.WithListener(ln))
-	Register(h, c)
+	nextchat.Register(h, c)
 	go h.Spin()
 	t.Cleanup(func() { _ = h.Close() })
 	time.Sleep(30 * time.Millisecond)
@@ -52,17 +56,17 @@ func TestConfigHandler_NoCode(t *testing.T) {
 		t.Fatalf("status=%d", resp.StatusCode)
 	}
 	raw, _ := io.ReadAll(resp.Body)
-	var body dangerConfig
+	var body map[string]any
 	if err := json.Unmarshal(raw, &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.NeedCode {
-		t.Fatal("expected needCode=false")
+	if body["needCode"] != false {
+		t.Fatalf("expected needCode=false, got %v", body["needCode"])
 	}
-	if !body.HideUserApiKey {
-		t.Fatal("expected hideUserApiKey=true")
+	if body["hideUserApiKey"] != true {
+		t.Fatalf("expected hideUserApiKey=true, got %v", body["hideUserApiKey"])
 	}
-	if body.CustomModels == "" {
+	if body["customModels"] == "" {
 		t.Fatal("expected customModels")
 	}
 }

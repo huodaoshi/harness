@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Backend: 启动并调试",
+      "name": "Backend: 调试",
       "type": "go",
       "request": "launch",
       "mode": "debug",
@@ -15,12 +15,57 @@
       }
     },
     {
-      "name": "Frontend: 开发服务器",
+      "name": "Frontend: Next.js 服务端断点",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev:debug"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "preLaunchTask": "frontend: mask",
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/frontend/node_modules/**"]
+    },
+    {
+      "name": "Frontend: Chrome 客户端断点",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend",
+      "sourceMapPathOverrides": {
+        "webpack://_N_E/*": "${webRoot}/*",
+        "webpack:///*": "*",
+        "webpack:///./*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Frontend: 全栈断点 (Server+Chrome)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev:debug"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "preLaunchTask": "frontend: mask",
+      "serverReadyAction": {
+        "pattern": "- Local:\\s+(https?://[^\\s]+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}/frontend"
+      },
+      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/frontend/node_modules/**"]
+    },
+    {
+      "name": "Frontend: 终端 dev (无断点)",
       "type": "node-terminal",
       "request": "launch",
       "command": "yarn dev",
       "cwd": "${workspaceFolder}/frontend",
-      "envFile": "${workspaceFolder}/frontend/.env.local",
       "env": {
         "NODE_ENV": "development"
       }
@@ -31,7 +76,6 @@
       "request": "launch",
       "command": "yarn dev",
       "cwd": "${workspaceFolder}/NextChat",
-      "envFile": "${workspaceFolder}/NextChat/.env.local",
       "env": {
         "NODE_ENV": "development",
         "HUSKY": "0"
@@ -51,6 +95,18 @@
           "to": "${workspaceFolder}/backend"
         }
       ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "全栈: Backend + Frontend 服务端",
+      "configurations": ["Backend: 调试", "Frontend: Next.js 服务端断点"],
+      "stopAll": true
+    },
+    {
+      "name": "全栈: Backend + Frontend 全栈断点",
+      "configurations": ["Backend: 调试", "Frontend: 全栈断点 (Server+Chrome)"],
+      "stopAll": true
     }
   ]
 }

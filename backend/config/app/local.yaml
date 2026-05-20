@@ -1,7 +1,10 @@
 # Local overrides (APP_ENV=local).非机密项；密钥见 local.secrets.yaml（勿提交）。
 
+log:
+  level: debug
+
 jwt:
-  secret: "harness-local-dev-jwt-secret"
+  secret: "3po2ritLDKvokMsWCAfLlUggMjtCzWC2WL-pubZ3prc"
 
 wellness:
   use_memory_store: true

@@ -104,7 +104,7 @@ type AppConfig struct {
 	Port int
 }
 
-// LogConfig holds structured logging settings (wired in a later issue).
+// LogConfig holds structured logging settings (see infra/logging).
 type LogConfig struct {
 	Level  string `yaml:"level"`
 	Format string `yaml:"format"`
