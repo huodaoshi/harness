@@ -13,7 +13,7 @@
 
 ## 子目录
 
-各子目录均来自 **`.agents/skills/`** 的拷贝（如 `caveman`、`triage`、`grill-with-docs` 等）。
+各子目录均来自 **`.agents/skills/`** 的拷贝（如 `caveman`、`triage`、`init-knowledge`、`learn`、`grill-with-docs` 等）。**维护真源在 `.agents/skills/`**；改技能后请同步复制到本目录对应子文件夹。
 
 ## 从本仓库根安装到当前项目
 
@@ -23,8 +23,9 @@
 # 列出本仓库作为「包」时可发现的技能
 pnpm --dir cli dev add . --list
 
-# 安装指定技能（示例：caveman）
+# 安装指定技能（示例：caveman、知识库 init/learn）
 pnpm --dir cli dev add . --skill caveman -y
+pnpm --dir cli dev add . --skill init-knowledge --skill learn -y
 ```
 
 更多见 **`cli/README.md`**、官方 `skills` 文档。
@@ -45,6 +46,7 @@ pnpm --dir D:\harness\cli dev add D:\harness --list
 
 # 安装若干技能到当前项目（cwd = one-eino，技能装进本项目的 .agents/skills 等约定目录）
 pnpm --dir D:\harness\cli dev add D:\harness --skill caveman --skill triage -y
+pnpm --dir D:\harness\cli dev add D:\harness --skill init-knowledge --skill learn -y
 ```
 
 说明：

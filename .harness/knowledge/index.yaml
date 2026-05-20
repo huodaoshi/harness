@@ -1,0 +1,27 @@
+project_name: harness
+repo_layout: single
+detected_languages:
+  - typescript
+domains:
+  - name: harness
+    type: shared
+    lang: typescript
+    path: ./
+    description: Agent harness 骨架——skills CLI、规则/技能规范源、.agents 技能真源与文档
+    skills:
+      - .harness/knowledge/domains/shared/01-architecture.md
+      - .harness/knowledge/domains/shared/02-business-domains.md
+      - .harness/knowledge/domains/shared/03-infra-patterns.md
+      - .harness/knowledge/domains/shared/04-dev-guide.md
+    rules:
+      - .cursor/rules/_lang/typescript.mdc
+      - .claude/rules/_lang/typescript.md
+      - .cursor/rules/docs-zh.mdc
+      - .cursor/rules/git.mdc
+      - .cursor/rules/windows-shell.mdc
+    validate_commands:
+      - pnpm --dir cli exec vitest run
+      - pnpm --dir cli run type-check
+    test_glob: "*.test.ts"
+shared_skills: []
+cross_domain_skills: []

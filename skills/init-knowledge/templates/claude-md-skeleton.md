@@ -1,55 +1,42 @@
-# harness
+# {{PROJECT_NAME}}
 
-> Agent 工作流骨架：skills CLI、规则/技能规范源、团队技能与项目知识库。
+> {{PROJECT_ONE_LINER}}
 
 ## 仓库结构
 
 ```
-harness/
-├── cli/                 # skills CLI（TypeScript）
-├── .agents/skills/      # 团队技能真源
-├── skills/              # skills add 可安装的 skill 副本
-├── rules/               # Cursor/Claude 规则规范源
-├── .cursor/rules/       # Cursor 规则（bootstrap）
-├── .claude/rules/       # Claude Code 规则镜像
-├── docs/agents/         # Agent 协作文档
-├── docs/adr/            # 架构决策
-├── .scratch/            # 功能分拣（可选）
-└── .harness/knowledge/  # 项目知识库
+{{REPO_TREE}}
 ```
 
 ## 技术栈
 
-| 区域 | 技术 |
-|------|------|
-| CLI | TypeScript (ESM)、Node ≥ 22、pnpm、vitest、@clack/prompts |
-| 规则 | Cursor `.mdc`、Claude `.md` |
-| 文档 | Markdown（默认简体中文） |
+{{TECH_STACK_TABLE}}
+
+## 服务架构
+
+{{SERVICE_ARCH}}
 
 ## 域清单
 
-- **harness**（shared, typescript）— 仓库根 `./`；知识见 `.harness/knowledge/domains/shared/`
+{{DOMAIN_LIST}}
 
 ## 常用命令
 
 ```bash
-pnpm --dir cli exec vitest run
-pnpm --dir cli run type-check
-pnpm --dir cli dev add . --list
-pnpm --dir cli dev rules add . -a cursor
+{{COMMON_COMMANDS}}
 ```
 
 ## 全局约定
 
 - **禁止自动提交**：除非用户明确要求，不要执行 `git commit`
-- **提交格式**：`<type>(<scope>): <subject>`，详见 `.cursor/rules/git.mdc`
-- **文档语言**：人类可读文档默认**简体中文**（见 `.cursor/rules/docs-zh.mdc`）
-- **Windows 终端**：勿用 `&&` 连接命令，见 `windows-shell.mdc`
+- **提交格式**：`<type>(<scope>): <subject>`，详见 `.cursor/rules/git.mdc` 或 `.claude/rules/git.md`（若存在）
+- **文档语言**：人类可读文档默认**简体中文**（见 `.cursor/rules/docs-zh.mdc` 或等价规则）
+- **Windows 终端**：勿用 `&&` 连接命令，见 `windows-shell` 规则
 - 其他约定见 **`.cursor/rules/`**、**`.claude/rules/`** 与 **`.harness/knowledge/`**
 
 ## Agent 工作流（harness）
 
-### Issue 与分拣（`.scratch/`）
+### Issue 与分拣（若使用 `.scratch/`）
 
 - Issue 存放在 **`.scratch/<feature>/`**，详见 `docs/agents/issue-tracker.md`
 - 文件顶部 **`Status:`** 与分拣角色见 `docs/agents/triage-labels.md`
@@ -100,6 +87,6 @@ pnpm --dir cli dev rules add . -a cursor
 ## 自学习与索引
 
 - **增量学习**：**learn** 技能；先 **Read** **`.harness/knowledge/learner-workflow.md`**，并依据 **`.harness/knowledge/index.yaml`**
-- **全量 / 首次**：在 **harness** 仓库根对目标仓运行 **init-knowledge**（可传目标仓绝对路径）
+- **全量 / 首次**：在 **harness** 仓库根对 `$TARGET` 运行 **init-knowledge**（可传目标仓绝对路径）
 - **项目索引**：**`.harness/knowledge/index.yaml`**；domain 划分变更后重跑 **init-knowledge**（如 `--domain <name>`）
 - **规则包同步**（可选）：`skills rules add <harness-repo> -a cursor` 等，见 `rules/README.md`

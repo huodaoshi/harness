@@ -1,0 +1,35 @@
+{
+  "detected_at": "2026-05-20T00:00:00+08:00",
+  "signals": {
+    "monorepo_files": [],
+    "lang_files": {
+      "package.json": ["./cli/package.json"]
+    },
+    "top_level_dirs": [
+      ".agents",
+      ".claude",
+      ".cursor",
+      ".harness",
+      ".scratch",
+      "cli",
+      "docs",
+      "rules",
+      "skills"
+    ]
+  },
+  "domain_candidates": [
+    {
+      "path": "./",
+      "name": "harness",
+      "type": "shared",
+      "lang": "typescript",
+      "evidence": [
+        "cli/package.json",
+        "cli/src/cli.ts",
+        "rules/",
+        "skills/",
+        ".agents/skills/"
+      ]
+    }
+  ]
+}
