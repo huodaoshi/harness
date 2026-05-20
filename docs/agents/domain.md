@@ -2,7 +2,7 @@
 
 工程类技能在探索代码库时，应如何消费本仓库的领域文档。
 
-**布局：** 本仓库为**单上下文**——根目录 `CONTEXT.md` + `docs/adr/`。
+**布局（推荐）：** 产品类仓库常用**单上下文**——根目录 `CONTEXT.md` + `docs/adr/`。本 **harness 骨架默认可不带**上述文件；若不存在，按下文「探索前先读」处理。
 
 **生成约定：** 新建或更新 `CONTEXT.md`、`docs/adr/*.md` 时，正文使用**简体中文**。术语表条目、ADR 标题与叙述均用中文；文件名可继续使用 `0001-简短英文-slug.md` 这类编号 + slug 形式。
 
@@ -17,11 +17,11 @@
 
 ```
 /
-├── CONTEXT.md
-├── docs/adr/
+├── CONTEXT.md          # 按需创建
+├── docs/adr/           # 按需创建
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
-└── src/
+└── …                   # 应用/业务代码目录因项目而异
 ```
 
 （多上下文仓库使用根目录 `CONTEXT-MAP.md` 指向各 `src/<context>/CONTEXT.md`；本仓库未采用。）
