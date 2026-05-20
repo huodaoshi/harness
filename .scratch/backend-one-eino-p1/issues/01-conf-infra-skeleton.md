@@ -1,6 +1,6 @@
 # P1-01：配置与共享基础设施骨架
 
-**Status:** ready-for-agent  
+**Status:** ready-for-human  
 **类型：** enhancement  
 **切片：** AFK  
 
@@ -16,11 +16,11 @@
 
 ## 验收标准
 
-- [ ] `conf/config.yaml` + `conf/local.yaml` 存在；`APP_ENV=local` 可加载
-- [ ] `MONGODB_URI` / `REDIS_ADDR` 等环境变量覆盖与 ADR 一致
-- [ ] `go test ./...` 全绿
-- [ ] `go run ./cmd/server` 启动日志含配置端口与 infra ping 结果
-- [ ] 未设置 Redis 时启动失败有明确错误（或 local.yaml 默认本机 Redis）
+- [x] `conf/config.yaml` + `conf/local.yaml` 存在；`APP_ENV=local` 可加载
+- [x] `MONGODB_URI` / `REDIS_ADDR` 等环境变量覆盖与 ADR 一致
+- [x] `go test ./...` 全绿
+- [x] `go run ./cmd/server` 启动日志含配置端口与 infra ping 结果
+- [x] 未设置 Redis 时启动失败有明确错误（或 local.yaml 默认本机 Redis）
 
 ## 阻塞于
 

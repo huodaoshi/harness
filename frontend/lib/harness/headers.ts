@@ -1,6 +1,7 @@
+import { harnessAuthHeaders } from "./auth";
 import { getChatMode } from "./chat-mode";
 
-/** 合并 LLM / API 请求头；关怀模式时附加 X-Harness-Mode */
+/** 合并 LLM / API 请求头；关怀模式时附加 X-Harness-Mode 与鉴权头 */
 export function withHarnessHeaders(
   init?: HeadersInit,
 ): Record<string, string> {
@@ -16,6 +17,7 @@ export function withHarnessHeaders(
   }
   if (getChatMode() === "wellness") {
     out["X-Harness-Mode"] = "wellness";
+    Object.assign(out, harnessAuthHeaders());
   }
   return out;
 }

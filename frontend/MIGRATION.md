@@ -46,5 +46,5 @@
 - [ ] 其余 `/api/{provider}`
 - [ ] `app/mcp/`（Server Actions）
 - [ ] 插件、`/api/proxy`、WebDAV、Upstash
-- [ ] 关怀模式设置项 + `/v1/profile` + `/v1/sessions/stream`
+- [ ] 关怀模式设置项 + `/v1/profile` + `/v1/sessions/stream`（鉴权头见 `lib/harness/auth.ts`）
 - [ ] 删除 `web/`

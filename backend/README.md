@@ -17,10 +17,10 @@ backend/
 
 ## Spike S1–S3（当前）
 
-- `GET /v1/sessions/:id?user_id=` — 会话消息列表
+- `GET /v1/sessions/:id` — 会话消息列表（需 JWT 或 `X-Anon-ID`）
 - `POST /v1/sessions/end` — 结束会话并生成 `summary3`
-- `GET /v1/profile?user_id=` — 关系档案（无档案时返回空对象）
-- `PUT /v1/profile?user_id=` — 全量 upsert（`self`、`people[]`、`current_issue`）
+- `GET /v1/profile` — 关系档案（无档案时返回空对象）
+- `PUT /v1/profile` — 全量 upsert（`self`、`people[]`、`current_issue`）
 - `POST /v1/sessions/stream` — SSE：`token` + `done`（普聊）；`crisis` / `medical` / `error`（门禁支路，零 LLM）
 - Eino Graph：`safety_gate` → 分支 → `crisis_branch` | `medical_branch` | `block_branch` | `profile_inject` → `fake_chat`
 - MongoDB：`relationship_profiles`、`session_summaries`（Level 1–2 记忆）
@@ -78,6 +78,25 @@ go run ./cmd/server
 
 - `HTTP_ADDR` — 覆盖监听地址；未设时用 `app.port`（默认 `8080`）
 - `APP_ENV` — 配置叠加层，默认 `local`
+
+## 知识库（P1-05 / P1-06）
+
+- 默认 Space `space_id=1`（doc_type 1/2/3），启动时 bootstrap
+- Admin 入库：`POST /v1/admin/spaces/:space_id/ingest`（inline markdown，`source_type=1`）
+- 检索验收：`GET /v1/admin/spaces/:space_id/search?q=...`（需 Redis Stack / RediSearch）
+- 流水线：`resolve → parse → chunk → assignID → index`（**无** LLM score/tag）
+- **MQ**：
+  - `mq.provider=local`：`cmd/server` **内嵌**消费 `knowledge-ingest`（同进程）
+  - `mq.provider=rocketmq`：独立运行 `go run ./cmd/knowledgeindexing`
+- 本地 embedding 默认 `fake`（`conf/local.yaml`）；生产可设 `embedding.provider=ark`
+
+```text
+# Admin 登录（local 默认 admin/admin，见 conf/local.yaml）
+curl -s -X POST http://localhost:8080/v1/auth/admin/login -H "Content-Type: application/json" -d "{\"username\":\"admin\",\"password\":\"admin\"}"
+
+# 提交 ingest（替换 TOKEN）
+curl -s -X POST http://localhost:8080/v1/admin/spaces/1/ingest -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d "{\"source_type\":1,\"content\":\"# FAQ\\n\\n测试知识\",\"doc_type\":2}"
+```
 
 ## 鉴权（P1-03）
 

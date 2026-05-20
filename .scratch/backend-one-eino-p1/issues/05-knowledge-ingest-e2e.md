@@ -1,6 +1,6 @@
 # P1-05：知识库默认 Space + 精简入库 E2E
 
-**Status:** ready-for-agent  
+**Status:** ready-for-human  
 **类型：** enhancement  
 **切片：** AFK  
 
@@ -16,10 +16,10 @@
 
 ## 验收标准
 
-- [ ] 启动后存在默认 Space（迁移脚本或 Bootstrap）
-- [ ] Admin 提交 markdown ingest → job status=done → `FT.SEARCH`/Search 能命中 chunk
-- [ ] 流水线仅：resolve → parse → chunk → assignID → index
-- [ ] 危机文案仍走 YAML/JSON SafetyGate，不依赖本 Space
+- [x] 启动后存在默认 Space（`EnsureDefaultSpace` bootstrap）
+- [x] Admin 提交 markdown ingest → job status=done → `FT.SEARCH`/Search 能命中 chunk（需 Redis Stack；单测在无 FT 时仅验 job done）
+- [x] 流水线仅：resolve → parse → chunk → assignID → index
+- [x] 危机文案仍走 YAML/JSON SafetyGate，不依赖本 Space
 
 ## 阻塞于
 

@@ -35,6 +35,25 @@ wechat:
 rate_limit:
   stream_per_minute: 60
 
+embedding:
+  provider: "fake"
+  model: ""
+  api_key: "${EMBEDDING_API_KEY}"
+  dim: 128
+
+mq:
+  provider: "local"
+  name_server: ""
+  group: "knowledgeindexing"
+  producer_group: "harness-api"
+
+cos:
+  provider: "local"
+
+knowledge_indexing:
+  ingest_fetch_allow_hosts: []
+  ingest_fetch_allowed_content_type_prefixes: []
+
 admin_static_login:
   enabled: false
   username: "admin"

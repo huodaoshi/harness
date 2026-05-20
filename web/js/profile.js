@@ -1,4 +1,4 @@
-import { apiHeaders, profileURL, userId } from "./user.js";
+import { apiErrorMessage, apiHeaders, profileURL } from "./user.js";
 
 const peopleList = () => document.getElementById("people-list");
 const selfNote = () => document.getElementById("profile-self-note");
@@ -50,6 +50,9 @@ export async function loadProfileForm() {
   setStatus("加载中…");
   try {
     const res = await fetch(profileURL(), { headers: apiHeaders(false) });
+    if (res.status === 401 || res.status === 429) {
+      throw new Error(await apiErrorMessage(res));
+    }
     if (!res.ok) {
       throw new Error(await res.text());
     }
@@ -79,6 +82,9 @@ export async function saveProfile() {
       headers: apiHeaders(),
       body: JSON.stringify(body),
     });
+    if (res.status === 401 || res.status === 429) {
+      throw new Error(await apiErrorMessage(res));
+    }
     if (!res.ok) {
       throw new Error(await res.text());
     }
@@ -113,6 +119,5 @@ export function initProfileScreen({ onNavigate }) {
       loadProfileForm();
       onNavigate("profile");
     },
-    userId,
   };
 }

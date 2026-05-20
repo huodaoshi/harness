@@ -1,5 +1,5 @@
 import { consumeSSE } from "./sse.js";
-import { apiHeaders, userId } from "./user.js";
+import { apiErrorMessage, apiHeaders } from "./user.js";
 import { initProfileScreen } from "./profile.js";
 
 const STORAGE_SESSION = "fwa_session_id";
@@ -165,11 +165,14 @@ async function endSession() {
     const res = await fetch("/v1/sessions/end", {
       method: "POST",
       headers: apiHeaders(),
-      body: JSON.stringify({ session_id: sessionId, user_id: userId() }),
+      body: JSON.stringify({ session_id: sessionId }),
     });
+    if (res.status === 401 || res.status === 429) {
+      throw new Error(await apiErrorMessage(res));
+    }
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error ?? `HTTP ${res.status}`);
+      throw new Error(err.error ?? err.message ?? `HTTP ${res.status}`);
     }
     const data = await res.json();
     sessionEnded = true;
@@ -200,7 +203,6 @@ async function streamMessage(text) {
 
   const payload = {
     session_id: sessionId || undefined,
-    user_id: userId(),
     mode,
     message: text,
   };
@@ -208,9 +210,15 @@ async function streamMessage(text) {
   try {
     const res = await fetch("/v1/sessions/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...apiHeaders(false) },
+      headers: apiHeaders(),
       body: JSON.stringify(payload),
     });
+
+    if (res.status === 401 || res.status === 429) {
+      showError(await apiErrorMessage(res));
+      assistantEl.remove();
+      return;
+    }
 
     if (res.status === 409) {
       const err = await res.json().catch(() => ({}));

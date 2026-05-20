@@ -20,11 +20,46 @@ type Config struct {
 	WeChat           WeChatConfig `yaml:"wechat"`
 	AdminStaticLogin AdminStaticLoginConfig `yaml:"admin_static_login"`
 	RateLimit        RateLimitConfig        `yaml:"rate_limit"`
+	Embedding        EmbeddingConfig
+	MQ               MQConfig
+	COS              COSConfig
+	KnowledgeIndexing KnowledgeIndexingConfig `yaml:"knowledge_indexing"`
 }
 
 // RateLimitConfig holds HTTP rate limit settings.
 type RateLimitConfig struct {
 	StreamPerMinute int `yaml:"stream_per_minute"`
+}
+
+// EmbeddingConfig holds embedding model settings for knowledge indexing.
+type EmbeddingConfig struct {
+	Provider string
+	Model    string `yaml:"model"`
+	APIKey   string `yaml:"api_key"`
+	Dim      int    `yaml:"dim"`
+}
+
+// MQConfig holds message queue settings.
+type MQConfig struct {
+	Provider      string
+	NameServer    string `yaml:"name_server"`
+	Group         string
+	ProducerGroup string `yaml:"producer_group"`
+}
+
+// COSConfig holds object storage settings for file ingest.
+type COSConfig struct {
+	Provider  string
+	Bucket    string
+	Region    string
+	SecretID  string `yaml:"secret_id"`
+	SecretKey string `yaml:"secret_key"`
+}
+
+// KnowledgeIndexingConfig holds worker fetch policy for URL ingest.
+type KnowledgeIndexingConfig struct {
+	IngestFetchAllowHosts                 []string `yaml:"ingest_fetch_allow_hosts"`
+	IngestFetchAllowedContentTypePrefixes []string `yaml:"ingest_fetch_allowed_content_type_prefixes"`
 }
 
 // JWTConfig holds JWT settings.
@@ -135,6 +170,15 @@ func Load() (*Config, error) {
 	if cfg.RateLimit.StreamPerMinute == 0 {
 		cfg.RateLimit.StreamPerMinute = 60
 	}
+	if cfg.MQ.Provider == "" {
+		cfg.MQ.Provider = "local"
+	}
+	if cfg.Embedding.Provider == "" {
+		cfg.Embedding.Provider = "fake"
+	}
+	if cfg.COS.Provider == "" {
+		cfg.COS.Provider = "local"
+	}
 	return cfg, nil
 }
 
@@ -158,6 +202,67 @@ func mergeConfig(base, overlay *Config) {
 	mergeWeChat(&base.WeChat, &overlay.WeChat)
 	mergeAdminStaticLogin(&base.AdminStaticLogin, &overlay.AdminStaticLogin)
 	mergeRateLimit(&base.RateLimit, &overlay.RateLimit)
+	mergeEmbedding(&base.Embedding, &overlay.Embedding)
+	mergeMQ(&base.MQ, &overlay.MQ)
+	mergeCOS(&base.COS, &overlay.COS)
+	mergeKnowledgeIndexing(&base.KnowledgeIndexing, &overlay.KnowledgeIndexing)
+}
+
+func mergeEmbedding(base, overlay *EmbeddingConfig) {
+	if overlay.Provider != "" {
+		base.Provider = overlay.Provider
+	}
+	if overlay.Model != "" {
+		base.Model = overlay.Model
+	}
+	if overlay.APIKey != "" {
+		base.APIKey = overlay.APIKey
+	}
+	if overlay.Dim > 0 {
+		base.Dim = overlay.Dim
+	}
+}
+
+func mergeMQ(base, overlay *MQConfig) {
+	if overlay.Provider != "" {
+		base.Provider = overlay.Provider
+	}
+	if overlay.NameServer != "" {
+		base.NameServer = overlay.NameServer
+	}
+	if overlay.Group != "" {
+		base.Group = overlay.Group
+	}
+	if overlay.ProducerGroup != "" {
+		base.ProducerGroup = overlay.ProducerGroup
+	}
+}
+
+func mergeCOS(base, overlay *COSConfig) {
+	if overlay.Provider != "" {
+		base.Provider = overlay.Provider
+	}
+	if overlay.Bucket != "" {
+		base.Bucket = overlay.Bucket
+	}
+	if overlay.Region != "" {
+		base.Region = overlay.Region
+	}
+	if overlay.SecretID != "" {
+		base.SecretID = overlay.SecretID
+	}
+	if overlay.SecretKey != "" {
+		base.SecretKey = overlay.SecretKey
+	}
+}
+
+func mergeKnowledgeIndexing(base, overlay *KnowledgeIndexingConfig) {
+	if len(overlay.IngestFetchAllowHosts) > 0 {
+		base.IngestFetchAllowHosts = overlay.IngestFetchAllowHosts
+	}
+	if len(overlay.IngestFetchAllowedContentTypePrefixes) > 0 {
+		base.IngestFetchAllowedContentTypePrefixes = overlay.IngestFetchAllowedContentTypePrefixes
+	}
 }
 
 func mergeRateLimit(base, overlay *RateLimitConfig) {

@@ -16,11 +16,11 @@
 
 ## 验收标准
 
-- [ ] 无 Authorization 且无合法 `X-Anon-ID` 时 stream/profile 返回 401
-- [ ] JWT 用户与游客 A 无法读取 B 的 session/profile
-- [ ] SMS 本地 mock（或 local 配置）可完成登录并拿 token
-- [ ] 现有集成测试改为 JWT/游客；`go test ./...` 绿
-- [ ] 对齐 [.scratch/family-wellness-ai/issues/12-auth-and-rate-limit.md](../../family-wellness-ai/issues/12-auth-and-rate-limit.md) 的隔离要求（限流见 04）
+- [x] 无 Authorization 且无合法 `X-Anon-ID` 时 stream/profile 返回 401
+- [x] JWT 用户与游客 A 无法读取 B 的 session/profile
+- [x] SMS 本地 mock（或 local 配置）可完成登录并拿 token
+- [x] 现有集成测试改为 JWT/游客；`go test ./...` 绿
+- [x] 对齐 [.scratch/family-wellness-ai/issues/12-auth-and-rate-limit.md](../../family-wellness-ai/issues/12-auth-and-rate-limit.md) 的隔离要求（限流见 04）
 
 ## 阻塞于
 

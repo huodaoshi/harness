@@ -16,11 +16,11 @@
 
 ## 验收标准
 
-- [ ] 目录符合 `modules/<name>/{domain,application,infra}` + `api/*.go`
-- [ ] `go test ./...` 全绿（含 crisis、medical、profile inject）
-- [ ] 迁出的 `*_test.go` 置于 `tests/` 镜像目录（见 `.cursor/rules/_lang/go.md`），不在 `internal/` 旁保留
-- [ ] 手工 `curl` stream 洪峰/危机用例与迁移前一致
-- [ ] 根目录无新增业务逻辑于 `internal/`（仅保留测试辅助或删除已迁代码）
+- [x] 目录符合 `modules/<name>/{domain,application,infra}` + `api/*.go`
+- [x] `go test ./...` 全绿（含 crisis、medical、profile inject）
+- [x] 迁出的 `*_test.go` 置于 `tests/` 镜像目录（见 `.cursor/rules/_lang/go.md`），不在 `internal/` 旁保留
+- [x] 手工 `curl` stream 洪峰/危机用例与迁移前一致
+- [x] 根目录无新增业务逻辑于 `internal/`（仅保留测试辅助或删除已迁代码）
 
 ## 阻塞于
 

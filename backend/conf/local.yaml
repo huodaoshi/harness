@@ -1,7 +1,20 @@
-# Local overrides (APP_ENV=local). Redis optional until P1-04 rate limit.
+# Local overrides (APP_ENV=local).
 
 jwt:
   secret: "harness-local-dev-jwt-secret"
 
 sms:
   provider: "local"
+
+embedding:
+  provider: "fake"
+
+mq:
+  provider: "local"
+
+admin_static_login:
+  enabled: true
+  username: "admin"
+  password: "admin"
+  user_id: "static-admin"
+  uid: 1

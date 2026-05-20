@@ -4,6 +4,8 @@
 
 P1 目标：平台骨架 + auth + 知识库；**不改** `/v1/sessions/stream` 编排契约。P2（ADK 合流）另开 epic。
 
+**状态（2026-05-20）**：01–07 实现已合入；issue 均为 `ready-for-human` 待人工点验。登录 UI（非 P1 阻塞）与 Redis Stack `FT.SEARCH` 联调见各 issue 备注。
+
 ## Issue 顺序
 
 | # | 文件 | 说明 |

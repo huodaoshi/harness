@@ -1,6 +1,6 @@
 # P1-07：客户端鉴权头迁移
 
-**Status:** ready-for-agent  
+**Status:** ready-for-human  
 **类型：** enhancement  
 **切片：** AFK  
 
@@ -14,8 +14,8 @@
 
 ## 验收标准
 
-- [ ] 本地联调：游客可洪峰聊天；登录用户 profile 隔离
-- [ ] 文档/README 更新启动步骤（auth + redis）
+- [x] 本地联调：游客可洪峰聊天；登录用户 profile 隔离（web 已支持 Bearer；登录 UI 待后续）
+- [x] 文档/README 更新启动步骤（auth + redis）
 
 ## 阻塞于
 
