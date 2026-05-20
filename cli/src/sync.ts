@@ -16,6 +16,7 @@ import { addSkillToLocalLock, computeSkillFolderHash, readLocalLock } from './lo
 import type { Skill, AgentType } from './types.ts';
 import { track } from './telemetry.ts';
 import { detectAgent, getAgentType } from './detect-agent.ts';
+import { resolveCliProjectRoot } from './project-root.ts';
 
 const isCancelled = (value: unknown): value is symbol => typeof value === 'symbol';
 
@@ -23,6 +24,8 @@ export interface SyncOptions {
   agent?: string[];
   yes?: boolean;
   force?: boolean;
+  /** 项目根（扫描 node_modules、读 skills-lock.json） */
+  cwd?: string;
 }
 
 /** 缩短路径用于显示：将 homedir 换为 ~，cwd 换为 . */
@@ -129,7 +132,7 @@ async function discoverNodeModuleSkills(
 }
 
 export async function runSync(args: string[], options: SyncOptions = {}): Promise<void> {
-  const cwd = process.cwd();
+  const cwd = resolveCliProjectRoot(options.cwd);
 
   // 在 AI agent 内运行时自动启用非交互模式
   const agentResult = await detectAgent();
@@ -465,6 +468,10 @@ export function parseSyncOptions(args: string[]): { options: SyncOptions } {
         nextArg = args[i];
       }
       i--;
+    } else if (arg === '--cwd' || arg === '-C') {
+      i++;
+      const next = args[i];
+      if (next) options.cwd = next;
     }
   }
 

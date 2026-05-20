@@ -141,6 +141,7 @@ ${BOLD}Add Options:${RESET}
   -g, --global           Install skill globally (user-level) instead of project-level
   -a, --agent <agents>   Specify agents to install to (use '*' for all agents)
   -s, --skill <skills>   Specify skill names to install (use '*' for all skills)
+  --cwd <dir>, -C <dir>  Target project root (.agents/skills, lock). Same as ${DIM}$INIT_CWD${RESET} when using ${DIM}pnpm --dir …/cli dev${RESET}
   -l, --list             List available skills in the repository without installing
   -y, --yes              Skip confirmation prompts
   --copy                 Copy files instead of symlinking to agent directories
@@ -939,6 +940,9 @@ ${BOLD}Usage:${RESET}
   skills rules experimental_install
 
 ${BOLD}add options:${RESET}  -a, --agent (required, one of cursor | claude-code)
+  --cwd <dir>, -C <dir>  Target project root (rules-lock.json + .cursor/… /.claude/…).
+                         Default order: ${DIM}$INIT_CWD${RESET} (pnpm/npm caller dir) then ${DIM}cwd${RESET}.
+                         Use with ${DIM}pnpm --dir …/cli dev${RESET} so install hits your repo, not ${DIM}cli/.cursor${RESET}.
   --to <path>  Override destination directory
   -g, --global  User-level rules directory (where supported)
   -y, --yes     Non-interactive (reserved)

@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { existsSync } from 'fs';
 import { cp, rm, mkdir } from 'fs/promises';
 import { join, resolve, dirname } from 'path';
+import { resolveCliProjectRoot } from './project-root.ts';
 import { parseSource } from './source-parser.ts';
 import { cloneRepo, cleanupTempDir } from './git.ts';
 import { agents } from './agents.ts';
@@ -31,7 +32,16 @@ export interface RulesAddOptions {
   copy?: boolean;
   /** 从 lock 恢复时不再次写锁 */
   skipWriteLock?: boolean;
+  /**
+   * 安装目标「项目根」（写入 `.cursor/rules`、`rules-lock.json`）。
+   * 与 `process.cwd()` 不同：用 `pnpm --dir path/to/cli` 时 cwd 常为 cli 包目录，应传递此字段或使用 INIT_CWD。
+   */
   cwd?: string;
+}
+
+/** 规则/锁文件与 `resolveCliProjectRoot` 使用同一套项目根解析。 */
+export function resolveRulesProjectRoot(explicitCwd?: string): string {
+  return resolveCliProjectRoot(explicitCwd);
 }
 
 export function parseRulesAddOptions(args: string[]): { source: string[]; options: RulesAddOptions } {
@@ -51,6 +61,10 @@ export function parseRulesAddOptions(args: string[]): { source: string[]; option
       i++;
       const next = args[i];
       if (next) options.to = next;
+    } else if (arg === '--cwd' || arg === '-C') {
+      i++;
+      const next = args[i];
+      if (next) options.cwd = next;
     } else if (arg === '-a' || arg === '--agent') {
       options.agent = options.agent || [];
       i++;
@@ -129,7 +143,7 @@ export async function runRulesAdd(
 ): Promise<void> {
   const { source, options: parsedOpts } = parseRulesAddOptions(sourceArgs);
   const options: RulesAddOptions = { ...parsedOpts, ...passedOptions };
-  const cwd = options.cwd || process.cwd();
+  const projectRoot = resolveRulesProjectRoot(options.cwd);
 
   if (source.length === 0) {
     p.log.error(pc.red('Missing source. Example: skills rules add vercel-labs/foo -a cursor'));
@@ -204,9 +218,13 @@ export async function runRulesAdd(
 
     const dest = resolveRulesDestDir(agent, {
       global: options.global,
-      cwd,
+      cwd: projectRoot,
       to: options.to,
     });
+
+    if (projectRoot !== process.cwd()) {
+      p.log.message(pc.dim(`Target project: ${projectRoot}`));
+    }
 
     const spinner = p.spinner();
     spinner.start(`Copying rules to ${pc.dim(dest)}...`);
@@ -221,8 +239,8 @@ export async function runRulesAdd(
         sourceType: parsed.type,
         copy: options.copy ?? true,
       };
-      const existing = await readRulesLock(cwd);
-      await writeRulesLock({ version: existing.version, install: installRecord }, cwd);
+      const existing = await readRulesLock(projectRoot);
+      await writeRulesLock({ version: existing.version, install: installRecord }, projectRoot);
       p.log.message(pc.dim(`Wrote ${pc.cyan('rules-lock.json')}`));
     }
 
@@ -237,9 +255,10 @@ export async function runRulesAdd(
 /**
  * 根据项目根 `rules-lock.json` 恢复规则（仅一条 install 记录）。
  */
-export async function runRulesInstallFromLock(_args: string[]): Promise<void> {
-  const cwd = process.cwd();
-  const lock = await readRulesLock(cwd);
+export async function runRulesInstallFromLock(args: string[]): Promise<void> {
+  const { options: parseOpts } = parseRulesAddOptions(args);
+  const projectRoot = resolveRulesProjectRoot(parseOpts.cwd);
+  const lock = await readRulesLock(projectRoot);
 
   if (!lock.install) {
     p.log.warn('No rules install entry in rules-lock.json');
@@ -257,7 +276,6 @@ export async function runRulesInstallFromLock(_args: string[]): Promise<void> {
 
   await runRulesAdd([source, '-a', agent, '-y'], {
     skipWriteLock: true,
-    cwd,
+    cwd: projectRoot,
   });
 }
-

@@ -6,6 +6,7 @@ import { sep, join, dirname } from 'path';
 import { parseSource, getOwnerRepo, parseOwnerRepo, isRepoPrivate } from './source-parser.ts';
 import { stripTerminalEscapes } from './sanitize.ts';
 import { searchMultiselect } from './prompts/search-multiselect.ts';
+import { resolveCliProjectRoot } from './project-root.ts';
 
 // Helper to check if a value is a cancel symbol (works with both clack and our custom prompts)
 const isCancelled = (value: unknown): value is symbol => typeof value === 'symbol';
@@ -429,6 +430,11 @@ export interface AddOptions {
   fullDepth?: boolean;
   copy?: boolean;
   dangerouslyAcceptOpenclawRisks?: boolean;
+  /**
+   * 安装目标「项目根」（`.agents/skills` 与各 agent 目录相对于此）。
+   * `pnpm --dir path/to/cli dev ...` 时可传 `--cwd` 或依赖 INIT_CWD。
+   */
+  cwd?: string;
 }
 
 /**
@@ -669,7 +675,7 @@ async function handleWellKnownSkills(
     installMode = 'copy';
   }
 
-  const cwd = process.cwd();
+  const cwd = resolveCliProjectRoot(options.cwd);
 
   // Build installation summary
   const summaryLines: string[] = [];
@@ -681,7 +687,10 @@ async function handleWellKnownSkills(
       targetAgents.map(async (agent) => ({
         skillName: skill.installName,
         agent,
-        installed: await isSkillInstalled(skill.installName, agent, { global: installGlobally }),
+        installed: await isSkillInstalled(skill.installName, agent, {
+          global: installGlobally,
+          cwd,
+        }),
       }))
     )
   );
@@ -696,7 +705,7 @@ async function handleWellKnownSkills(
   for (const skill of selectedSkills) {
     if (summaryLines.length > 0) summaryLines.push('');
 
-    const canonicalPath = getCanonicalPath(skill.installName, { global: installGlobally });
+    const canonicalPath = getCanonicalPath(skill.installName, { global: installGlobally, cwd });
     const shortCanonical = shortenPath(canonicalPath, cwd);
     summaryLines.push(`${pc.cyan(shortCanonical)}`);
     summaryLines.push(...buildAgentSummaryLines(targetAgents, installMode));
@@ -748,6 +757,7 @@ async function handleWellKnownSkills(
       const result = await installWellKnownSkillForAgent(skill, agent, {
         global: installGlobally,
         mode: installMode,
+        cwd,
       });
       results.push({
         skill: skill.installName,
@@ -922,6 +932,9 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
     process.exit(1);
   }
 
+  const projectRoot = resolveCliProjectRoot(options.cwd);
+  options.cwd = projectRoot;
+
   // --all implies --skill '*' and --agent '*' and -y
   if (options.all) {
     options.skill = ['*'];
@@ -955,6 +968,10 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
     );
   } else if (!process.stdin.isTTY) {
     showInstallTip();
+  }
+
+  if (projectRoot !== process.cwd()) {
+    p.log.message(pc.dim(`Target project: ${projectRoot}`));
   }
 
   let tempDir: string | null = null;
@@ -1386,7 +1403,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
       installMode = 'copy';
     }
 
-    const cwd = process.cwd();
+    const cwd = options.cwd ?? resolveCliProjectRoot();
 
     // Build installation summary
     const summaryLines: string[] = [];
@@ -1398,7 +1415,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
         targetAgents.map(async (agent) => ({
           skillName: skill.name,
           agent,
-          installed: await isSkillInstalled(skill.name, agent, { global: installGlobally }),
+          installed: await isSkillInstalled(skill.name, agent, { global: installGlobally, cwd }),
         }))
       )
     );
@@ -1429,7 +1446,7 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
       for (const skill of skills) {
         if (summaryLines.length > 0) summaryLines.push('');
 
-        const canonicalPath = getCanonicalPath(skill.name, { global: installGlobally });
+        const canonicalPath = getCanonicalPath(skill.name, { global: installGlobally, cwd });
         const shortCanonical = shortenPath(canonicalPath, cwd);
         summaryLines.push(`${pc.cyan(shortCanonical)}`);
         summaryLines.push(...buildAgentSummaryLines(targetAgents, installMode));
@@ -1524,13 +1541,14 @@ export async function runAdd(args: string[], options: AddOptions = {}): Promise<
           result = await installBlobSkillForAgent(
             { installName: blobSkill.name, files: blobSkill.files },
             agent,
-            { global: installGlobally, mode: installMode }
+            { global: installGlobally, mode: installMode, cwd }
           );
         } else {
           // Disk-based install: copy from cloned/local directory
           result = await installSkillForAgent(skill, agent, {
             global: installGlobally,
             mode: installMode,
+            cwd,
           });
         }
         results.push({
@@ -1942,6 +1960,10 @@ export function parseAddOptions(args: string[]): { source: string[]; options: Ad
       options.copy = true;
     } else if (arg === '--dangerously-accept-openclaw-risks') {
       options.dangerouslyAcceptOpenclawRisks = true;
+    } else if (arg === '--cwd' || arg === '-C') {
+      i++;
+      const next = args[i];
+      if (next) options.cwd = next;
     } else if (arg && !arg.startsWith('-')) {
       source.push(arg);
     }

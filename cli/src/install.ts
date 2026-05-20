@@ -1,9 +1,10 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { readLocalLock } from './local-lock.ts';
-import { runAdd } from './add.ts';
+import { runAdd, parseAddOptions } from './add.ts';
 import { runSync, parseSyncOptions } from './sync.ts';
 import { getUniversalAgents } from './agents.ts';
+import { resolveCliProjectRoot } from './project-root.ts';
 
 /**
  * 从本地 skills-lock.json 安装全部技能。
@@ -15,8 +16,9 @@ import { getUniversalAgents } from './agents.ts';
  * node_modules 中的技能通过 experimental_sync 处理。
  */
 export async function runInstallFromLock(args: string[]): Promise<void> {
-  const cwd = process.cwd();
-  const lock = await readLocalLock(cwd);
+  const { options: addOpts } = parseAddOptions(args);
+  const projectRoot = resolveCliProjectRoot(addOpts.cwd);
+  const lock = await readLocalLock(projectRoot);
   const skillEntries = Object.entries(lock.skills);
 
   if (skillEntries.length === 0) {
@@ -66,6 +68,7 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
         skill: skills,
         agent: universalAgentNames,
         yes: true,
+        cwd: projectRoot,
       });
     } catch (error) {
       p.log.error(
@@ -81,7 +84,7 @@ export async function runInstallFromLock(args: string[]): Promise<void> {
     );
     try {
       const { options: syncOptions } = parseSyncOptions(args);
-      await runSync(args, { ...syncOptions, yes: true, agent: universalAgentNames });
+      await runSync(args, { ...syncOptions, yes: true, agent: universalAgentNames, cwd: projectRoot });
     } catch (error) {
       p.log.error(
         `Failed to sync node_modules skills: ${error instanceof Error ? error.message : 'Unknown error'}`

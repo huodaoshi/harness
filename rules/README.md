@@ -47,7 +47,8 @@ pnpm --dir D:\harness\cli dev rules add D:\harness -a cursor
 pnpm --dir D:\harness\cli dev rules add D:\harness -a claude-code
 ```
 
-说明：**不写 `--to` 时**，规则写入 **当前 cwd** 下的 `.cursor/rules` / `.claude/rules`，因此必须先 **`cd` 到 one-eino**。
+说明：**不写 `--to` 时**，规则写入**目标项目根**下的 `.cursor/rules` / `.claude/rules`。项目根按顺序取：**`--cwd <路径>`** → **`INIT_CWD`**（pnpm/npm 记录你发起命令时的目录）→ **`process.cwd()`**。  
+因此从 **`D:\one-eino`** 执行 `pnpm --dir D:\harness\cli dev ...` 时，一般会装到 one-eino；若仍落到 harness 的 `cli/.cursor`，可显式指定：`pnpm --dir D:\harness\cli dev rules add D:\harness -a cursor --cwd D:\one-eino`。
 
 在 one-eino 根会生成 / 更新 **`rules-lock.json`**（记录来源为 `D:\harness`）；他人可在 one-eino 根执行 **`pnpm --dir D:\harness\cli dev rules experimental_install`** 复现（需能访问同一来源）。
 
@@ -69,3 +70,24 @@ pnpm --dir D:\harness\cli dev rules add huodaoshi/harness#main -a cursor
 
 将 **`huodaoshi/harness`** 换成你的实际 **`owner/repo`**。包内仍须包含 **`rules/cursor/`** 与 **`rules/claude/`** 子目录。
 
+---
+
+## pnpm 版本不一致（This project is configured to use …）
+
+`D:\harness\cli\package.json` 的 **`packageManager`** 字段会锁定 pnpm 主版本。若本机 Corepack / 全局 pnpm 与之一致，就不会报错。
+
+**推荐**：在安装前激活与仓库一致的 pnpm（版本号以 **`cli/package.json`** 里 **`packageManager`** 为准，当前为 **11.1.3**）：
+
+```powershell
+corepack prepare pnpm@11.1.3 --activate
+pnpm --dir D:\harness\cli dev rules add huodaoshi/harness -a cursor
+```
+
+**临时绕过**（不推荐长期使用）：`pnpm --dir D:\harness\cli --pm-on-fail=ignore dev rules add ...`
+
+**不经 pnpm**：若已在 `D:\harness\cli` 执行过依赖安装（存在 **`node_modules`**），可在目标项目根用 Node 直接跑 CLI 脚本（需 Node ≥22，与 `cli` 的 `engines` 一致）：
+
+```powershell
+cd D:\one-eino
+node --experimental-strip-types D:\harness\cli\src\cli.ts rules add huodaoshi/harness -a cursor
+```

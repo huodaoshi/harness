@@ -336,6 +336,11 @@ describe('shouldInstallInternalSkills', () => {
 });
 
 describe('parseAddOptions', () => {
+  it('should parse --cwd and -C', () => {
+    expect(parseAddOptions(['source', '--cwd', 'D:\\proj', '-y']).options.cwd).toBe('D:\\proj');
+    expect(parseAddOptions(['source', '-C', '/tmp/x']).options.cwd).toBe('/tmp/x');
+  });
+
   it('should parse --all flag', () => {
     const result = parseAddOptions(['source', '--all']);
     expect(result.source).toEqual(['source']);

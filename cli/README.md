@@ -20,7 +20,7 @@ pnpm --dir cli dev rules add <owner/repo> -a claude-code
 pnpm --dir cli dev rules experimental_install
 ```
 
-安装成功后写入/更新项目根 **`rules-lock.json`**（与 `skills-lock.json` 独立）。
+安装成功后写入/更新**目标项目根**的 **`rules-lock.json`**（与 `skills-lock.json` 独立）。若用 `pnpm --dir cli dev ...` 从其它目录调用，CLI 会优先使用 **`INIT_CWD`** 或 **`--cwd <项目根>`**，避免装到 `cli/.cursor`；详见 **`docs/cli-rules.md`**。
 
 ## 安装技能
 

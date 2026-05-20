@@ -1,8 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { resolve } from 'path';
 import {
   parseRulesAddOptions,
   getRulesPackSubdir,
   RULES_AGENT_TYPES,
+  resolveRulesProjectRoot,
 } from '../src/rules-add.ts';
 
 describe('parseRulesAddOptions', () => {
@@ -23,6 +25,39 @@ describe('parseRulesAddOptions', () => {
     const { source, options } = parseRulesAddOptions(['./local-pack', '-a', 'claude-code']);
     expect(source).toEqual(['./local-pack']);
     expect(options.agent).toEqual(['claude-code']);
+  });
+
+  it('parses --cwd and -C', () => {
+    expect(parseRulesAddOptions(['.', '-a', 'cursor', '--cwd', 'D:\\proj']).options.cwd).toBe('D:\\proj');
+    expect(parseRulesAddOptions(['.', '-C', '/tmp/x', '-a', 'cursor']).options.cwd).toBe('/tmp/x');
+  });
+});
+
+describe('resolveRulesProjectRoot', () => {
+  const hadInit = 'INIT_CWD' in process.env;
+  const prevInit = process.env.INIT_CWD;
+
+  beforeEach(() => {
+    delete process.env.INIT_CWD;
+  });
+
+  afterEach(() => {
+    if (hadInit) process.env.INIT_CWD = prevInit;
+    else delete process.env.INIT_CWD;
+  });
+
+  it('uses explicit path when given', () => {
+    process.env.INIT_CWD = '/from-env';
+    expect(resolveRulesProjectRoot('/explicit')).toBe(resolve('/explicit'));
+  });
+
+  it('uses INIT_CWD when no explicit path', () => {
+    process.env.INIT_CWD = 'D:\\other-project';
+    expect(resolveRulesProjectRoot()).toBe(resolve('D:\\other-project'));
+  });
+
+  it('falls back to process.cwd when INIT_CWD unset', () => {
+    expect(resolveRulesProjectRoot()).toBe(process.cwd());
   });
 });
 

@@ -50,8 +50,8 @@ pnpm --dir D:\harness\cli dev add D:\harness --skill caveman --skill triage -y
 说明：
 
 - **第一个参数**是技能包根路径（此处为 **`D:\harness`**，会扫描其中的 `skills/` 与各 `SKILL.md`）。
-- **`cd` 到 `D:\one-eino`** 再执行，安装目标才是 **one-eino**，而不是 harness。
-- 若已将 `skills` CLI **全局 / 发布为 npm 包**，也可使用 `npx skills add D:\harness ...`（与上面等价，视你环境选择）。
+- **目标项目根**解析顺序：**`--cwd <路径>`** → **`INIT_CWD`**（pnpm 记录你发起命令时的目录）→ **`process.cwd()`**。从 **`D:\one-eino`** 执行 `pnpm --dir D:\harness\cli dev …` 时一般会装到 one-eino；若仍落到 harness 的 `cli/.agents`，可加：`… add … --cwd D:\one-eino`。
+- 若已将 `skills` CLI **全局 / 发布为 npm 包**，也可使用 `npx skills add D:\harness ...`（与上面等价，视环境选择）。
 
 ---
 
@@ -72,3 +72,8 @@ pnpm --dir D:\harness\cli dev add huodaoshi/harness#main --skill caveman -y
 
 私有仓库需本机已配置 **`gh auth`**、**SSH key** 或 **HTTPS 凭据**，与平常 `git clone` 一致。
 
+---
+
+## pnpm 版本不一致
+
+与 **`rules/README.md`** 中「pnpm 版本不一致」一节相同：先 **`corepack prepare pnpm@11.1.3 --activate`**（版本以 **`D:\harness\cli\package.json`** 的 **`packageManager`** 为准），或使用 **`--pm-on-fail=ignore`** / **`node --experimental-strip-types …\cli\src\cli.ts`** 调用方式。
