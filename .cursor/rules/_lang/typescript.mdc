@@ -18,7 +18,7 @@ paths:
 - 公共 API 必须有显式返回类型
 - 接口与类型别名：领域模型用 `interface`（可扩展），联合 / 交叉 / mapped 用 `type`
 - 枚举：优先 `const` 对象 + `as const` 推导，避免 TypeScript `enum`（除非有运行时反向映射需求）
-- **领域语义数值（角色、状态位等）**：**禁止**使用无命名的数字字面量联合类型（如 `role: 1 | 2`、`kind: 0 | 1`）作为对外 props、store 模型或公共 API 的类型。必须在 `src/constants/`（或该域专用 `*.ts`）声明 **`const Xxx = { … } as const`**，并导出 **`type XxxId = (typeof Xxx)[keyof typeof Xxx]`**（命名与 `naming.md` 一致：`MessageRoleId`、`ScanStatusId` 等）；业务代码只引用 **`Xxx.User`** 等与 **`XxxId`**，禁止在业务处散落裸 `1` / `2` 表示语义。
+- **领域语义数值（角色、状态位等）**：**禁止**使用无命名的数字字面量联合类型（如 `role: 1 | 2`、`kind: 0 | 1`）作为对外 props、store 模型或公共 API 的类型。必须在 `src/constants/`（或该域专用 `*.ts`）声明 **`const Xxx = { … } as const`**，并导出 **`type XxxId = (typeof Xxx)[keyof typeof Xxx]`**（命名与 `naming.mdc` 一致：`MessageRoleId`、`ScanStatusId` 等）；业务代码只引用 **`Xxx.User`** 等与 **`XxxId`**，禁止在业务处散落裸 `1` / `2` 表示语义。
 - 不导出的内部类型放在使用处，导出类型放在 `types.ts` / `types/` 目录
 
 ## 模块化
@@ -39,7 +39,7 @@ paths:
 - 变量 / 函数：`camelCase`
 - 常量：`UPPER_SNAKE_CASE`（仅模块级真正常量）
 - React 组件文件：`PascalCase.tsx`；其他文件：`kebab-case.ts` 或 `camelCase.ts`（按项目约定）
-- 缩写词首字母大写、其余小写：`sessionId`、`spaceId`、`userId`——不写成 `sessionID`、`spaceID`（Go 风格）或 `session_id`（snake_case）；见 `rules/naming.md`
+- 缩写词首字母大写、其余小写：`sessionId`、`spaceId`、`userId`——不写成 `sessionID`、`spaceID`（Go 风格）或 `session_id`（snake_case）；见 `rules/naming.mdc`
 
 ## 不可变性
 

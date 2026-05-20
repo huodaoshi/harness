@@ -56,5 +56,5 @@ paths:
 
 ## 格式化
 
-- **缩进**：**每级 4 个空格**（**不使用 Tab**），与 **`typescript.md` §Lint/格式化** 一致。  
+- **缩进**：**每级 4 个空格**（**不使用 Tab**），与 **`typescript.mdc` §Lint/格式化** 一致。  
 - **适用范围**：同一 `.vue` 文件内的 **`<template>`**、**`<script setup>`**、**`<style>`**（含 `scoped`、`lang="scss"` / `less`、第二段非 scoped `<style>`）均遵守上述缩进；嵌套越深，每多一级增加 **4 空格**，禁止 2 空格与 Tab 混用。

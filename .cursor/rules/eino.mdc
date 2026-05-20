@@ -115,6 +115,6 @@ for {
 
 ## 与本仓其他 rule
 
-- 命名：`rules/naming.md`（Go `sessionID` + `json:"session_id"`）
-- Git：`rules/git.md`（`backend/` 开发分支）
+- 命名：`rules/naming.mdc`（Go `sessionID` + `json:"session_id"`）
+- Git：`rules/git.mdc`（`backend/` 开发分支）
 - 文档语言：`docs-zh.mdc`

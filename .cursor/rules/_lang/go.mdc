@@ -45,7 +45,7 @@ func New(deps ...) Example { return &example{...} }
 - 导出符号：首字母大写
 - 缩写：保持全大写（`HTTP`、`URL`、`API`、`ID`、`UID`）——`sessionID` 不写成 `sessionId` 或 `session_id`
 - 文件名：小写下划线分隔
-- JSON 序列化字段用 `snake_case` tag（`json:"session_id"`），Go 字段名保持 `SessionID`；两者不相同是正确的，见 `rules/naming.md`
+- JSON 序列化字段用 `snake_case` tag（`json:"session_id"`），Go 字段名保持 `SessionID`；两者不相同是正确的，见 `rules/naming.mdc`
 
 ## 上下文与并发
 
