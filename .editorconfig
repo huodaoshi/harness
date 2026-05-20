@@ -20,11 +20,5 @@ tab_width = 4
 indent_style = tab
 tab_width = 4
 
-[NextChat/**]
-indent_size = 2
-
-[lobehub/**]
-indent_size = 2
-
 [cli/**]
-indent_size = 2
+indent_size = 4
