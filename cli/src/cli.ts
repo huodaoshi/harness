@@ -25,6 +25,8 @@ import {
   formatSourceInput,
 } from './update-source.ts';
 
+import { runRulesAdd, runRulesInstallFromLock } from './rules-add.ts';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function getVersion(): string {
@@ -924,6 +926,39 @@ async function main(): Promise<void> {
   const restArgs = args.slice(1);
 
   switch (command) {
+    case 'rules': {
+      if (!inAgent) showLogo();
+      const sub = restArgs[0];
+      const ruleRest = restArgs.slice(1);
+      if (!sub || sub === '--help' || sub === '-h') {
+        console.log(`
+${BOLD}skills rules${RESET} — install Cursor / Claude Code project rules from a Git package
+
+${BOLD}Usage:${RESET}
+  skills rules add <source> -a cursor|claude-code [options]
+  skills rules experimental_install
+
+${BOLD}add options:${RESET}  -a, --agent (required, one of cursor | claude-code)
+  --to <path>  Override destination directory
+  -g, --global  User-level rules directory (where supported)
+  -y, --yes     Non-interactive (reserved)
+  See ${DIM}../../docs/cli-rules.md${RESET} for package layout (rules/cursor, rules/claude) and rules-lock.json.
+`);
+        break;
+      }
+      if (sub === 'add') {
+        console.log();
+        await runRulesAdd(ruleRest);
+        break;
+      }
+      if (sub === 'experimental_install') {
+        await runRulesInstallFromLock(ruleRest);
+        break;
+      }
+      console.log(`Unknown skills rules command: ${sub}`);
+      console.log(`Run ${BOLD}skills rules --help${RESET} for usage.`);
+      break;
+    }
     case 'find':
     case 'search':
     case 'f':

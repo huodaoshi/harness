@@ -72,6 +72,10 @@ export interface AgentConfig {
   skillsDir: string;
   /** 全局技能目录；若 agent 不支持全局安装则为 undefined。 */
   globalSkillsDir: string | undefined;
+  /** 项目内规则目录（相对项目根）；无则不支持 skills rules。 */
+  rulesDir?: string;
+  /** 用户级规则目录；无则不支持 skills rules -g。 */
+  globalRulesDir?: string;
   detectInstalled: () => Promise<boolean>;
   /** 是否在通用 agent 列表中显示；默认为 true。 */
   showInUniversalList?: boolean;

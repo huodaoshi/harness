@@ -10,6 +10,18 @@
 
 [![skills.sh](https://skills.sh/b/vercel-labs/skills)](https://skills.sh/vercel-labs/skills)
 
+## 安装编辑器规则（Cursor / Claude Code）
+
+自本 fork 起的 CLI 支持从 Git 规则包安装项目规则（包内需含 `rules/cursor/` 或 `rules/claude/`）。完整约定见 **[`docs/cli-rules.md`](../docs/cli-rules.md)** 与 ADR `docs/adr/0001-skills-cli-rules-install.md`。
+
+```bash
+pnpm --dir cli dev rules add <owner/repo> -a cursor
+pnpm --dir cli dev rules add <owner/repo> -a claude-code
+pnpm --dir cli dev rules experimental_install
+```
+
+安装成功后写入/更新项目根 **`rules-lock.json`**（与 `skills-lock.json` 独立）。
+
 ## 安装技能
 
 ```bash

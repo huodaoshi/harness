@@ -78,6 +78,8 @@ export const agents: Record<AgentType, AgentConfig> = {
     displayName: 'Claude Code',
     skillsDir: '.claude/skills',
     globalSkillsDir: join(claudeHome, 'skills'),
+    rulesDir: '.claude/rules',
+    globalRulesDir: join(claudeHome, 'rules'),
     detectInstalled: async () => {
       return existsSync(claudeHome);
     },
@@ -190,6 +192,8 @@ export const agents: Record<AgentType, AgentConfig> = {
     displayName: 'Cursor',
     skillsDir: '.agents/skills',
     globalSkillsDir: join(home, '.cursor/skills'),
+    rulesDir: '.cursor/rules',
+    globalRulesDir: join(home, '.cursor/rules'),
     detectInstalled: async () => {
       return existsSync(join(home, '.cursor'));
     },
