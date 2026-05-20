@@ -30,3 +30,7 @@ Issue 以 markdown 形式存放在 `.scratch/<feature>/`。详见 `docs/agents/i
 ### Domain docs（领域文档）
 
 若已建立 `CONTEXT.md` 与 `docs/adr/`，参见 `docs/agents/domain.md`。本 harness 骨架**默认可以不包含**二者，开工后再按需添加。
+
+### 项目知识库（`.harness/knowledge/`）
+
+索引与按域文档见 **`docs/agents/knowledge.md`**。首次初始化用 **init-knowledge** 技能，日常增量更新用 **learn** 技能。
