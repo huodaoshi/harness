@@ -32,6 +32,7 @@ frontend/.next/
 
 # Go / VS Code debug binaries
 **/__debug_bin.exe
+*.test.exe
 
 # Hertz static FS compress cache (web assets use Compress: false)
 *.hertz.gz

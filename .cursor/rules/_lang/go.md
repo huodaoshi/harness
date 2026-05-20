@@ -70,6 +70,10 @@ func New(deps ...) Example { return &example{...} }
 
 ## 测试
 
-- 测试文件命名 `*_test.go`，与被测代码同包
-- 表驱动测试优先
-- 集成测试用 `// +build integration` 或独立目录
+- **目录**：测试文件放在 **`tests/`** 下，目录结构与源代码**镜像对应**，**不要**与 `.go` 源文件同目录并列。
+  - 例：`internal/session/graph.go` → `tests/internal/session/graph_test.go`
+  - 例：`conf/config.go` → `tests/conf/config_test.go`
+- **包名**：对外部包测试使用 `package <pkg>_test`（如 `session_test`），`import` 被测包；仅测未导出细节时可在 `tests/...` 下同包，但须单独子目录且不与 `internal/` 源混放。
+- 文件命名仍用 `*_test.go`；表驱动测试优先。
+- 集成 / E2E：`tests/integration/` 或 `tests/e2e/`（可再加 build tag `//go:build integration`）。
+- 运行：`go test ./...` 仍从模块根（如 `backend/`）执行，须能收集到 `tests/**` 下用例。

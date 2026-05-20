@@ -2,6 +2,19 @@
 
 关系情绪 AI MVP 后端（Go + Hertz + Eino）。
 
+## 目录（ADR-0002）
+
+```text
+backend/
+  api/                          # HTTP 路由与 handler
+  modules/wellness/
+    domain/                     # Store 接口与模型
+    application/                # 会话图、Executor
+    infra/{store,safety,chatmodel,configpaths}/
+  tests/                        # 镜像路径的 *_test.go
+  conf/  config/  cmd/server/
+```
+
 ## Spike S1–S3（当前）
 
 - `GET /v1/sessions/:id?user_id=` — 会话消息列表
@@ -35,13 +48,17 @@ cd backend
 docker compose up -d
 ```
 
+启动 **Mongo + Redis**（鉴权、限流依赖 Redis）。
+
 环境变量：
 
 | 变量 | 默认 |
 | ---- | ---- |
 | `MONGODB_URI` | `mongodb://localhost:27017` |
 | `MONGODB_DB` | `family_wellness` |
-| `USE_MEMORY_STORE` | 未设置 → 连 Mongo；`true` → 仅内存（测试用） |
+| `REDIS_ADDR` | `127.0.0.1:6379` |
+| `USE_MEMORY_STORE` | 未设置 → 连 Mongo；`true` → wellness 仅内存（仍连 Mongo/Redis 作 auth/限流） |
+| `rate_limit.stream_per_minute` | `60`（`conf/config.yaml`） |
 
 ## 开发
 
@@ -51,15 +68,30 @@ go test ./...
 go run ./cmd/server
 ```
 
+配置（ADR-0002 P1-01）：
+
+- 分层 YAML：`conf/config.yaml` + `conf/{APP_ENV}.yaml`（默认 `APP_ENV=local`）
+- 须在 **`backend/` 目录**下启动，以便加载 `conf/`
+- `HTTP_ADDR` 可覆盖 `app.port`；Mongo/Redis 见 `conf/connection_env.go` 与环境变量
+
 环境变量：
 
-- `HTTP_ADDR` — 默认 `:8080`
+- `HTTP_ADDR` — 覆盖监听地址；未设时用 `app.port`（默认 `8080`）
+- `APP_ENV` — 配置叠加层，默认 `local`
+
+## 鉴权（P1-03）
+
+- Wellness：`Authorization: Bearer <token>` **或** `X-Anon-ID: <uuid>`（游客 `user_id`=`anon:{uuid}`）
+- 已废弃：query `?user_id=` / `X-User-Id`
+- 短信：`POST /v1/auth/sms/send`、`POST /v1/auth/sms/verify`（`sms.provider=local` 时验证码打日志）
+- 本地需 **Redis**（`REDIS_ADDR`）与 **JWT_SECRET**（见 `conf/local.yaml`）
 
 ## 验证
 
 ```text
 curl -N -X POST http://localhost:8080/v1/sessions/stream ^
   -H "Content-Type: application/json" ^
+  -H "X-Anon-ID: 11111111-1111-4111-8111-111111111111" ^
   -d "{\"message\":\"hello\",\"mode\":\"distress\"}"
 
 curl -N -X POST http://localhost:8080/v1/sessions/stream ^

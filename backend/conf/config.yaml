@@ -1,0 +1,43 @@
+app:
+  port: 8080
+
+log:
+  level: info
+  format: text
+
+llm:
+  provider: "fake"
+  model: ""
+  api_key: "${ARK_API_KEY}"
+
+mongodb:
+  uri: "mongodb://localhost:27017"
+  database: "family_wellness"
+
+redis:
+  addrs:
+    - "127.0.0.1:6379"
+  required: true
+
+jwt:
+  secret: "${JWT_SECRET}"
+  access_token_ttl: 7200
+  refresh_token_ttl: 2592000
+
+sms:
+  provider: "local"
+
+wechat:
+  miniprogram:
+    app_id: ""
+    app_secret: ""
+
+rate_limit:
+  stream_per_minute: 60
+
+admin_static_login:
+  enabled: false
+  username: "admin"
+  password: ""
+  user_id: "static-admin"
+  uid: 1

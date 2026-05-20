@@ -3,37 +3,41 @@ package main
 import (
 	"context"
 	"log"
-	"os"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
 
-	"github.com/huodaoshi/harness/backend/internal/configpaths"
-	"github.com/huodaoshi/harness/backend/internal/httpserver"
-	"github.com/huodaoshi/harness/backend/internal/session"
+	"github.com/huodaoshi/harness/backend/api"
+	"github.com/huodaoshi/harness/backend/infra"
+	"github.com/huodaoshi/harness/backend/modules/wellness/application"
+	"github.com/huodaoshi/harness/backend/modules/wellness/infra/configpaths"
 )
 
 func main() {
 	ctx := context.Background()
-	exec, err := session.NewExecutor(ctx)
+
+	bundle, err := loadConfigAndInfra(ctx)
+	if err != nil {
+		log.Fatalf("bootstrap: %v", err)
+	}
+	log.Printf("config loaded (env=%s port=%d)", bundle.Cfg.App.Env, bundle.Cfg.App.Port)
+
+	auth, err := wireAuth(bundle.Cfg, bundle.MongoClient, bundle.RedisClient)
+	if err != nil {
+		log.Fatalf("auth: %v", err)
+	}
+
+	exec, err := application.NewExecutor(ctx)
 	if err != nil {
 		log.Fatalf("session executor: %v", err)
 	}
 
-	addr := os.Getenv("HTTP_ADDR")
-	if addr == "" {
-		addr = ":8080"
-	}
+	addr := listenAddr(bundle.Cfg)
 
 	h := server.Default(server.WithHostPorts(addr))
-	h.POST("/v1/sessions/stream", httpserver.NewStreamHandler(exec))
-	h.GET("/v1/sessions/:id", httpserver.NewGetSessionHandler(exec.Store))
-	h.POST("/v1/sessions/end", httpserver.NewEndSessionHandler(exec.Store))
-	h.GET("/v1/profile", httpserver.NewGetProfileHandler(exec.Store))
-	h.PUT("/v1/profile", httpserver.NewPutProfileHandler(exec.Store))
+	api.RegisterAuthRoutes(h, api.NewAuthHandler(auth.Service), api.JWTAuthMiddleware(auth.Signer))
+	streamRL := infra.NewRedisRateLimiter(bundle.RedisClient)
+	api.RegisterWellnessRoutes(h, exec, api.JWTOrGuestMiddleware(auth.Signer), streamRL, bundle.Cfg.RateLimit.StreamPerMinute)
 
-	webRoot := configpaths.WebRoot()
-	httpserver.RegisterWebStatic(h, webRoot)
-
-	log.Printf("listening on %s (web=%s)", addr, webRoot)
+	log.Printf("listening on %s (web=%s)", addr, configpaths.WebRoot())
 	h.Spin()
 }
