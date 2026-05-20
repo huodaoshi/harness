@@ -1,0 +1,36 @@
+---
+description: Windows PowerShell 下禁止用 && 链式命令；git 等操作用分号或并行调用
+alwaysApply: true
+---
+
+# Windows 终端约定
+
+本仓库在 Windows 上常用 **PowerShell 5.x**（Cursor 默认 shell）。**不要使用 `&&` 连接命令**——会报「`&&` 不是有效的语句分隔符」。
+
+## 正确做法
+
+**并行、互不依赖的命令**（如提交前检查）→ **分多次 Shell 工具调用**，每次一条命令：
+
+```text
+git status
+git diff
+git diff --staged
+git log -5 --oneline
+```
+
+**必须在同一次调用里顺序执行** → 用分号 `;`（PowerShell 合法）：
+
+```text
+git diff; git diff --staged
+```
+
+**不要用：**
+
+```text
+git diff && git diff --staged
+```
+
+## 其它
+
+- 需要 `&&` 语义时可用 `cmd /c "git diff && git diff --staged"`，但优先 `;` 或分开调用。
+- 若终端已升级为 **PowerShell 7+**，`&&` 可用；在未确认版本前仍按本规则避免 `&&`。
