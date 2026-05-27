@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>code-review-skill(1) — User Commands (en_US)</title>
+  <title>code-review(1) — User Commands (en_US)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -425,7 +425,7 @@
 
     <div class="one-liner">
       <span>
-        <span class="dim">$&nbsp;</span><span class="em">man code-review-skill</span><span class="cursor"></span>
+        <span class="dim">$&nbsp;</span><span class="em">man code-review</span><span class="cursor"></span>
       </span>
       <span class="lang-toggle">
         <span class="dim">LANG=</span><a href="index.html">zh_CN</a><span class="sep">&nbsp;|&nbsp;</span><a href="index.en.html" class="on">en_US</a>
@@ -440,7 +440,7 @@
   <h2 class="sec">NAME</h2>
   <section class="body">
     <p>
-      <span class="em">code-review-skill</span> &mdash; A comprehensive, modular code review skill for Claude Code
+      <span class="em">code-review</span> &mdash; A comprehensive, modular code review skill for Claude Code
     </p>
   </section>
 
@@ -448,9 +448,9 @@
   <h2 class="sec">SYNOPSIS</h2>
   <section class="body">
     <pre class="pre">
-<span class="amber">Use code-review-skill to</span> review this PR
-<span class="amber">Use code-review-skill to</span> review this &lt;<span class="dim">component</span>&gt;
-<span class="amber">Use code-review-skill for</span> <span class="dim">[</span>security <span class="dim">|</span> performance <span class="dim">|</span> architecture<span class="dim">]</span> review</pre>
+<span class="amber">Use code-review to</span> review this PR
+<span class="amber">Use code-review to</span> review this &lt;<span class="dim">component</span>&gt;
+<span class="amber">Use code-review for</span> <span class="dim">[</span>security <span class="dim">|</span> performance <span class="dim">|</span> architecture<span class="dim">]</span> review</pre>
   </section>
 
   <!-- ═══ DESCRIPTION ═══ -->
@@ -555,11 +555,11 @@
 
 <pre class="codeblock"><span class="cmt"># macOS / Linux</span>
 <span class="prompt">$</span> <span class="cmd">git clone</span> <span class="arg">https://github.com/awesome-skills/code-review-skill.git</span> \
-    ~/.claude/skills/code-review-skill
+    ~/.claude/skills/code-review
 
 <span class="cmt"># Windows PowerShell</span>
 <span class="prompt">PS&gt;</span> <span class="cmd">git clone</span> <span class="arg">https://github.com/awesome-skills/code-review-skill.git</span> `
-       "$env:USERPROFILE\.claude\skills\code-review-skill"</pre>
+       "$env:USERPROFILE\.claude\skills\code-review"</pre>
   </section>
 
   <!-- ═══ EXAMPLES ═══ -->
@@ -567,7 +567,7 @@
   <section class="body">
     <ul class="examples">
       <li>
-        <span class="q">Use code-review-skill to review this PR</span>
+        <span class="q">Use code-review to review this PR</span>
         <span class="note">runs the full four-phase review</span>
       </li>
       <li>
@@ -589,7 +589,7 @@
   <h2 class="sec">FILES</h2>
   <section class="body">
 <pre class="tree">
-<span class="dir">~/.claude/skills/code-review-skill/</span>
+<span class="dir">~/.claude/skills/code-review/</span>
 <span class="branch">├──</span> <span class="file">SKILL.md</span>                              <span class="cmt"># core, loaded on activation (~190 lines)</span>
 <span class="branch">├──</span> <span class="file">README.md</span>
 <span class="branch">├──</span> <span class="file">LICENSE</span>                               <span class="cmt"># MIT</span>
@@ -654,7 +654,7 @@
   <div class="statusbar-inner">
     <div class="statusbar-l">
       <span>-- NORMAL --</span>
-      <span>code-review-skill.1</span>
+      <span>code-review.1</span>
     </div>
     <div class="statusbar-r">
       <span><kbd>g</kbd> top</span>

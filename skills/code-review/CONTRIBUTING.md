@@ -9,7 +9,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 ### 目录结构
 
 ```
-code-review-skill/
+code-review/
 ├── SKILL.md                    # Required: main file (always loaded)
 ├── README.md
 ├── CONTRIBUTING.md
@@ -73,7 +73,7 @@ allowed-tools: ["Read", "Grep", "Glob"]  # 可选：限制工具访问
 - 避免下划线或大写字母
 
 ```
-✅ 正确：code-review-excellence, typescript-advanced-types
+✅ 正确：code-review, typescript-advanced-types
 ❌ 错误：CodeReview, code_review, TYPESCRIPT
 ```
 
@@ -306,7 +306,7 @@ feat: 添加 Go 语言代码审查指南
 
 将修改后的 Skill 复制到 `~/.claude/skills/` 目录，然后在 Claude Code 中测试：
 ```bash
-cp -r ai-code-review-guide ~/.claude/skills/code-review-excellence
+cp -r ai-code-review-guide ~/.claude/skills/code-review
 ```
 
 ### Q: 我应该更新 SKILL.md 还是 reference 文件？

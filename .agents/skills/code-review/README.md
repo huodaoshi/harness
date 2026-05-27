@@ -210,7 +210,7 @@ Phase 4 - Summary & Decision
 ### &#128193; Repository Structure
 
 ```
-code-review-skill/
+code-review/
 |
 +-- SKILL.md                              # Core skill - loaded on activation (~190 lines)
 +-- README.md
@@ -259,17 +259,17 @@ code-review-skill/
 ```bash
 # macOS / Linux
 git clone https://github.com/awesome-skills/code-review-skill.git \
-  ~/.claude/skills/code-review-skill
+  ~/.claude/skills/code-review
 
 # Windows (PowerShell)
 git clone https://github.com/awesome-skills/code-review-skill.git `
-  "$env:USERPROFILE\.claude\skills\code-review-skill"
+  "$env:USERPROFILE\.claude\skills\code-review"
 ```
 
 **Or add to an existing plugin:**
 
 ```bash
-cp -r code-review-skill ~/.claude/plugins/your-plugin/skills/code-review/
+cp -r code-review ~/.claude/plugins/your-plugin/skills/code-review/
 ```
 
 ---
@@ -279,14 +279,14 @@ cp -r code-review-skill ~/.claude/plugins/your-plugin/skills/code-review/
 Once installed, activate the skill in your Claude Code session:
 
 ```
-Use code-review-skill to review this PR
+Use code-review to review this PR
 ```
 
 Or create a custom slash command in `.claude/commands/`:
 
 ```markdown
 <!-- .claude/commands/review.md -->
-Use code-review-skill to perform a thorough review of the changes in this PR.
+Use code-review to perform a thorough review of the changes in this PR.
 Focus on: security, performance, and maintainability.
 ```
 
@@ -463,7 +463,7 @@ MIT &copy; [awesome-skills](https://github.com/awesome-skills)
 ### &#128193; 仓库结构
 
 ```
-code-review-skill/
+code-review/
 |
 +-- SKILL.md                              # 核心技能，激活时加载（~190 行）
 +-- README.md
@@ -512,17 +512,17 @@ code-review-skill/
 ```bash
 # macOS / Linux
 git clone https://github.com/awesome-skills/code-review-skill.git \
-  ~/.claude/skills/code-review-skill
+  ~/.claude/skills/code-review
 
 # Windows（PowerShell）
 git clone https://github.com/awesome-skills/code-review-skill.git `
-  "$env:USERPROFILE\.claude\skills\code-review-skill"
+  "$env:USERPROFILE\.claude\skills\code-review"
 ```
 
 **或添加到现有插件：**
 
 ```bash
-cp -r code-review-skill ~/.claude/plugins/your-plugin/skills/code-review/
+cp -r code-review ~/.claude/plugins/your-plugin/skills/code-review/
 ```
 
 ---
@@ -532,14 +532,14 @@ cp -r code-review-skill ~/.claude/plugins/your-plugin/skills/code-review/
 安装后，在 Claude Code 会话中激活技能：
 
 ```
-Use code-review-skill to review this PR
+Use code-review to review this PR
 ```
 
 或在 `.claude/commands/` 中创建自定义斜杠命令：
 
 ```markdown
 <!-- .claude/commands/review.md -->
-使用 code-review-skill 对这次 PR 的变更进行全面审查。
+使用 code-review 对这次 PR 的变更进行全面审查。
 重点关注：安全性、性能和可维护性。
 ```
 

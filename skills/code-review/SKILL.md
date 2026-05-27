@@ -1,5 +1,5 @@
 ---
-name: code-review-excellence
+name: code-review
 description: |
   为 React 19、Vue 3、Angular 17+、Svelte 5、Rust、TypeScript、Java、Python、Django、Go、C#/.NET、Kotlin、NestJS、C/C++ 等提供全面代码审查指引。
   帮助发现 bug、提升代码质量、给出建设性反馈。
