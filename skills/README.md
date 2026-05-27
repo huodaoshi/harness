@@ -13,7 +13,7 @@
 
 ## 子目录
 
-各子目录均来自 **`.agents/skills/`** 的拷贝（如 `caveman`、`triage`、`init-knowledge`、`learn`、`grill-with-docs` 等）。**维护真源在 `.agents/skills/`**；改技能后请同步复制到本目录对应子文件夹。
+各子目录均来自 **`.agents/skills/`** 的拷贝（如 `caveman`、`triage`、`init-knowledge`、`learn`、`grill-with-docs`、`code-review-skill` 等）。**维护真源在 `.agents/skills/`**；改技能后请同步复制到本目录对应子文件夹。
 
 ## 从本仓库根安装到当前项目
 
@@ -26,6 +26,7 @@ pnpm --dir cli dev add . --list
 # 安装指定技能（示例：caveman、知识库 init/learn）
 pnpm --dir cli dev add . --skill caveman -y
 pnpm --dir cli dev add . --skill init-knowledge --skill learn -y
+pnpm --dir cli dev add . --skill code-review-excellence -y
 ```
 
 更多见 **`cli/README.md`**、官方 `skills` 文档。
