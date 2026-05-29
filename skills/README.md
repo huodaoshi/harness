@@ -79,4 +79,19 @@ pnpm --dir D:\harness\cli dev add huodaoshi/harness#main --skill caveman -y
 
 ## pnpm 版本不一致
 
-与 **`rules/README.md`** 中「pnpm 版本不一致」一节相同：先 **`corepack prepare pnpm@11.1.3 --activate`**（版本以 **`D:\harness\cli\package.json`** 的 **`packageManager`** 为准），或使用 **`--pm-on-fail=ignore`** / **`node --experimental-strip-types …\cli\src\cli.ts`** 调用方式。
+与 **`rules/README.md`** 中「pnpm 版本不一致」一节相同：可先 **`corepack prepare pnpm@11.1.3 --activate`**（版本以 **`cli/package.json`** 的 **`packageManager`** 为准），或改用 **node 直连 CLI**（与 `pnpm --dir cli dev` 等价，无需对齐 pnpm）：
+
+```powershell
+$CLI = "D:\harness\cli\src\cli.ts"
+$HARNESS = "D:\harness"
+$APP = "D:\your-app"
+
+# 技能
+node $CLI add $HARNESS --list --cwd $APP
+node $CLI add $HARNESS --skill init-knowledge --skill learn -y -a cursor --cwd $APP
+
+# 规则
+node $CLI rules add $HARNESS -a cursor -y --cwd $APP
+```
+
+完整说明见仓库根 **[`README.md`](../README.md#用-node-直接调用-cli)**。
